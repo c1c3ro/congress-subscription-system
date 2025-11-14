@@ -7,9 +7,9 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'v0 App',
-  description: 'Created with v0',
-  generator: 'v0.app',
+  title: 'Lançamento - NCS',
+  description: 'Confirme sua presença no lançamento do Núcleo de Carreira em Saúde',
+  generator: '',
   icons: {
     icon: [
       {
@@ -27,6 +27,20 @@ export const metadata: Metadata = {
     ],
     apple: '/apple-icon.png',
   },
+  openGraph: {
+    title: 'Lançamento - NCS',               // pode personalizar
+    description: 'Confirme sua presença no lançamento do Núcleo de Carreira em Saúde',// idem
+    url: 'lancamento-ncs.vercel.app',// coloque o domínio real
+    images: [
+      {
+        url: '/logo.webp', // ou '/og-image.jpg' se estiver no public/
+        width: 1200,
+        height: 630,
+        alt: 'Imagem de pré-visualização OG'
+      }
+    ],
+    siteName: 'Lançamento - NCS'
+  },
 }
 
 export default function RootLayout({
@@ -43,3 +57,4 @@ export default function RootLayout({
     </html>
   )
 }
+
