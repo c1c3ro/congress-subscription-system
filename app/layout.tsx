@@ -13,11 +13,11 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       {
-        url: '/logo.webp',
+        url: '/ogimage.webp',
         media: '(prefers-color-scheme: light)',
       },
       {
-        url: '/logo.webp',
+        url: '/ogimage.webp',
         media: '(prefers-color-scheme: dark)',
       },
       {
@@ -33,9 +33,7 @@ export const metadata: Metadata = {
     url: 'lancamento-ncs.vercel.app',// coloque o domínio real
     images: [
       {
-        url: '/logo.webp', // ou '/og-image.jpg' se estiver no public/
-        width: 1200,
-        height: 630,
+        url: '/ogimage.webp', // ou '/og-image.jpg' se estiver no public/
         alt: 'Imagem de pré-visualização OG'
       }
     ],
