@@ -36,7 +36,6 @@ export default function AdminPage() {
         setError("Senha incorreta");
       }
     } catch (error) {
-      console.error("[v0] Login error:", error);
       setError("Erro ao autenticar");
     } finally {
       setIsLoading(false);
@@ -50,7 +49,7 @@ export default function AdminPage() {
       setGuests(data.guests);
       setConfirmations(data.confirmations);
     } catch (error) {
-      console.error("[v0] Error loading data:", error);
+      console.error("Error loading data:", error);
     }
   };
 
@@ -75,7 +74,7 @@ export default function AdminPage() {
         loadData();
       }
     } catch (error) {
-      console.error("[v0] Error adding guest:", error);
+      console.error("Error adding guest:", error);
       alert("Erro ao adicionar convidado");
     } finally {
       setIsAddingGuest(false);
@@ -94,7 +93,7 @@ export default function AdminPage() {
         loadData();
       }
     } catch (error) {
-      console.error("[v0] Error removing guest:", error);
+      console.error("Error removing guest:", error);
       alert("Erro ao remover convidado");
     }
   };
@@ -160,7 +159,6 @@ export default function AdminPage() {
                 {isLoading ? "Entrando..." : "Entrar"}
               </Button>
             </form>
-
           </div>
         </div>
       </div>
@@ -174,7 +172,6 @@ export default function AdminPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-secondary/10 via-background to-muted">
       <div className="container mx-auto px-4 py-12 max-w-6xl">
-        {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold text-foreground mb-2">
@@ -236,7 +233,6 @@ export default function AdminPage() {
           </form>
         </div>
 
-        {/* Estatísticas */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
           <div className="bg-card rounded-xl p-6 border border-border">
             <div className="flex items-center gap-3">
@@ -335,7 +331,6 @@ export default function AdminPage() {
           </div>
         </div>
 
-        {/* Lista de Convidados */}
         <div className="bg-card rounded-xl shadow-lg border border-border overflow-hidden">
           <div className="p-6 border-b border-border">
             <h2 className="text-xl font-semibold text-foreground">

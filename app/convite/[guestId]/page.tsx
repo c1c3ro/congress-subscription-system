@@ -11,6 +11,7 @@ export default async function GuestConfirmationPage({ params }: PageProps) {
   const { guestId } = await params;
   
   const supabase = await createClient();
+  
   const { data: guest } = await supabase
     .from("guests")
     .select("*")
@@ -20,6 +21,13 @@ export default async function GuestConfirmationPage({ params }: PageProps) {
   if (!guest) {
     notFound();
   }
+
+  // Verificar se já existe uma confirmação
+  const { data: existingConfirmation } = await supabase
+    .from("confirmations")
+    .select("*")
+    .eq("guest_id", guestId)
+    .maybeSingle();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent">
@@ -112,7 +120,7 @@ export default async function GuestConfirmationPage({ params }: PageProps) {
           </div>
 
           {/* Formulário de Confirmação */}
-          <ConfirmationForm guest={guest} />
+          <ConfirmationForm guest={guest} existingConfirmation={existingConfirmation} />
         </div>
 
         {/* Footer */}

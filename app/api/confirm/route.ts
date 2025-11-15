@@ -12,7 +12,7 @@ export async function POST(request: Request) {
       .from("guests")
       .select("*")
       .eq("id", guestId)
-      .single();
+      .maybeSingle();
 
     if (!guest) {
       return NextResponse.json(
@@ -21,15 +21,13 @@ export async function POST(request: Request) {
       );
     }
 
-    // Verificar se já existe uma confirmação
     const { data: existing } = await supabase
       .from("confirmations")
       .select("*")
       .eq("guest_id", guestId)
-      .single();
+      .maybeSingle();
 
     if (existing) {
-      // Atualizar confirmação existente
       const { error } = await supabase
         .from("confirmations")
         .update({
@@ -41,7 +39,6 @@ export async function POST(request: Request) {
 
       if (error) throw error;
     } else {
-      // Criar nova confirmação
       const { error } = await supabase
         .from("confirmations")
         .insert({

@@ -1,17 +1,47 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Guest } from "@/lib/guests";
 import { Button } from "@/components/ui/button";
+import QRCode from "qrcode";
 
 interface ConfirmationFormProps {
   guest: Guest;
+  existingConfirmation?: {
+    id: string;
+    guest_id: string;
+    confirmed: boolean;
+    created_at: string;
+  } | null;
 }
 
-export default function ConfirmationForm({ guest }: ConfirmationFormProps) {
-  const [confirmed, setConfirmed] = useState<boolean | null>(null);
+export default function ConfirmationForm({ guest, existingConfirmation }: ConfirmationFormProps) {
+  const [confirmed, setConfirmed] = useState<boolean | null>(
+    existingConfirmation ? existingConfirmation.confirmed : null
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(!!existingConfirmation);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    if (isSubmitted && confirmed && canvasRef.current) {
+      QRCode.toCanvas(
+        canvasRef.current,
+        guest.id,
+        {
+          width: 200,
+          margin: 2,
+          color: {
+            dark: "#1f2937",
+            light: "#ffffff",
+          },
+        },
+        (error) => {
+          if (error) console.error("Error generating QR code:", error);
+        }
+      );
+    }
+  }, [isSubmitted, confirmed, guest.id]);
 
   const handleSubmit = async (willAttend: boolean) => {
     setIsSubmitting(true);
@@ -31,7 +61,7 @@ export default function ConfirmationForm({ guest }: ConfirmationFormProps) {
         setIsSubmitted(true);
       }
     } catch (error) {
-      console.error("[v0] Error submitting confirmation:", error);
+      console.error("Error submitting confirmation:", error);
       alert("Erro ao enviar confirmação. Por favor, tente novamente.");
     } finally {
       setIsSubmitting(false);
@@ -81,11 +111,22 @@ export default function ConfirmationForm({ guest }: ConfirmationFormProps) {
         <h3 className="text-2xl font-semibold text-foreground mb-2">
           {confirmed ? "Presença Confirmada!" : "Recebemos sua resposta"}
         </h3>
-        <p className="text-muted-foreground text-balance">
+        <p className="text-muted-foreground text-balance mb-6">
           {confirmed
             ? "Obrigado por confirmar! Aguardamos você no evento."
             : "Agradecemos por nos informar. Sentiremos sua falta!"}
         </p>
+
+        {confirmed && (
+          <div className="mt-8 flex flex-col items-center">
+            <div className="bg-white p-6 rounded-xl shadow-lg border-2 border-border inline-block">
+              <canvas ref={canvasRef}></canvas>
+            </div>
+            <p className="text-sm text-muted-foreground mt-4">
+              Apresente este QR Code na entrada do evento
+            </p>
+          </div>
+        )}
       </div>
     );
   }
@@ -144,7 +185,6 @@ export default function ConfirmationForm({ guest }: ConfirmationFormProps) {
           </Button>
         </div>
       </div>
-
     </div>
   );
 }
