@@ -63,23 +63,25 @@ export async function DELETE(request: Request) {
 
     const supabase = await createClient();
     
-    // Remover confirmação associada se existir
-    await supabase
+    const { error: confirmError } = await supabase
       .from("confirmations")
       .delete()
       .eq("guest_id", id);
 
-    // Remover convidado
-    const { error } = await supabase
+    if (confirmError) {
+      console.error("Error deleting confirmation:", confirmError);
+    }
+
+    const { error: guestError } = await supabase
       .from("guests")
       .delete()
       .eq("id", id);
 
-    if (error) throw error;
+    if (guestError) throw guestError;
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("[v0] Error deleting guest:", error);
+    console.error("Error deleting guest:", error);
     return NextResponse.json(
       { error: "Erro ao remover convidado" },
       { status: 500 }

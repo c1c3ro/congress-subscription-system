@@ -14,21 +14,37 @@ export async function GET() {
 
     const { data: confirmationsData, error: confirmationsError } = await supabase
       .from("confirmations")
-      .select("*")
-      .order("created_at", { ascending: false });
+      .select("*");
 
     if (confirmationsError) throw confirmationsError;
 
-    // Converter para o formato esperado pelo frontend
+    const confirmed = confirmationsData?.filter(c => c.status === "confirmed").length || 0;
+    const declined = confirmationsData?.filter(c => c.status === "declined").length || 0;
+    const totalGuests = guestsData?.length || 0;
+    
+    // Pendentes = total de convidados - (confirmados + declinados)
+    const pending = totalGuests - confirmed - declined;
+
+    const stats = {
+      confirmed,
+      declined,
+      pending,
+    };
+
     const confirmations = (confirmationsData || []).map((c) => ({
       guestId: c.guest_id,
+      status: c.status,
       confirmed: c.status === "confirmed",
       timestamp: c.confirmed_at || c.created_at,
     }));
 
-    return NextResponse.json({ guests: guestsData || [], confirmations });
+    return NextResponse.json({ 
+      guests: guestsData || [], 
+      confirmations,
+      stats 
+    });
   } catch (error) {
-    console.error("[v0] Error fetching data:", error);
+    console.error("Error fetching data:", error);
     return NextResponse.json({ error: "Erro no servidor" }, { status: 500 });
   }
 }

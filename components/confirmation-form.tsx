@@ -10,14 +10,14 @@ interface ConfirmationFormProps {
   existingConfirmation?: {
     id: string;
     guest_id: string;
-    confirmed: boolean;
+    status: string;
     created_at: string;
   } | null;
 }
 
 export default function ConfirmationForm({ guest, existingConfirmation }: ConfirmationFormProps) {
   const [confirmed, setConfirmed] = useState<boolean | null>(
-    existingConfirmation ? existingConfirmation.confirmed : null
+    existingConfirmation ? existingConfirmation.status === "confirmed" : null
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(!!existingConfirmation);

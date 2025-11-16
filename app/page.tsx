@@ -5,17 +5,28 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import type { Guest, Confirmation } from "@/lib/guests";
 
+type FilterType = "all" | "confirmed" | "declined" | "pending";
+
+interface Stats {
+  confirmed: number;
+  declined: number;
+  pending: number;
+}
+
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [guests, setGuests] = useState<Guest[]>([]);
   const [confirmations, setConfirmations] = useState<Confirmation[]>([]);
+  const [stats, setStats] = useState<Stats>({ confirmed: 0, declined: 0, pending: 0 });
   const [isLoading, setIsLoading] = useState(false);
   
   const [newGuestName, setNewGuestName] = useState("");
   const [newGuestCompanion, setNewGuestCompanion] = useState("");
   const [isAddingGuest, setIsAddingGuest] = useState(false);
+
+  const [filter, setFilter] = useState<FilterType>("all");
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,6 +59,7 @@ export default function AdminPage() {
       const data = await response.json();
       setGuests(data.guests);
       setConfirmations(data.confirmations);
+      setStats(data.stats);
     } catch (error) {
       console.error("Error loading data:", error);
     }
@@ -90,7 +102,9 @@ export default function AdminPage() {
       });
 
       if (response.ok) {
-        loadData();
+        await loadData(); // Recarregar dados imediatamente após exclusão bem-sucedida
+      } else {
+        alert("Erro ao remover convidado");
       }
     } catch (error) {
       console.error("Error removing guest:", error);
@@ -165,9 +179,23 @@ export default function AdminPage() {
     );
   }
 
-  const confirmedCount = confirmations.filter((c) => c.confirmed).length;
-  const declinedCount = confirmations.filter((c) => !c.confirmed).length;
-  const pendingCount = guests.length - confirmations.length;
+  const filteredGuests = guests.filter((guest) => {
+    if (filter === "all") return true;
+    
+    const confirmation = confirmations.find((c) => c.guestId === guest.id);
+    
+    if (filter === "confirmed") {
+      return confirmation && confirmation.confirmed === true;
+    }
+    if (filter === "declined") {
+      return confirmation && confirmation.confirmed === false;
+    }
+    if (filter === "pending") {
+      return !confirmation;
+    }
+    
+    return true;
+  });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-secondary/10 via-background to-muted">
@@ -234,7 +262,14 @@ export default function AdminPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <div className="bg-card rounded-xl p-6 border border-border">
+          <button
+            onClick={() => setFilter("all")}
+            className={`bg-card rounded-xl p-6 border transition-all text-left ${
+              filter === "all"
+                ? "border-primary ring-2 ring-primary/20"
+                : "border-border hover:border-primary/50"
+            }`}
+          >
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
                 <svg
@@ -256,9 +291,16 @@ export default function AdminPage() {
                 <p className="text-sm text-muted-foreground">Total Convidados</p>
               </div>
             </div>
-          </div>
+          </button>
 
-          <div className="bg-card rounded-xl p-6 border border-border">
+          <button
+            onClick={() => setFilter("confirmed")}
+            className={`bg-card rounded-xl p-6 border transition-all text-left ${
+              filter === "confirmed"
+                ? "border-success ring-2 ring-success/20"
+                : "border-border hover:border-success/50"
+            }`}
+          >
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-full bg-success/10 flex items-center justify-center">
                 <svg
@@ -276,13 +318,20 @@ export default function AdminPage() {
                 </svg>
               </div>
               <div>
-                <p className="text-2xl font-bold text-foreground">{confirmedCount}</p>
+                <p className="text-2xl font-bold text-foreground">{stats.confirmed}</p>
                 <p className="text-sm text-muted-foreground">Confirmados</p>
               </div>
             </div>
-          </div>
+          </button>
 
-          <div className="bg-card rounded-xl p-6 border border-border">
+          <button
+            onClick={() => setFilter("declined")}
+            className={`bg-card rounded-xl p-6 border transition-all text-left ${
+              filter === "declined"
+                ? "border-destructive ring-2 ring-destructive/20"
+                : "border-border hover:border-destructive/50"
+            }`}
+          >
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center">
                 <svg
@@ -300,13 +349,20 @@ export default function AdminPage() {
                 </svg>
               </div>
               <div>
-                <p className="text-2xl font-bold text-foreground">{declinedCount}</p>
+                <p className="text-2xl font-bold text-foreground">{stats.declined}</p>
                 <p className="text-sm text-muted-foreground">Não Comparecerão</p>
               </div>
             </div>
-          </div>
+          </button>
 
-          <div className="bg-card rounded-xl p-6 border border-border">
+          <button
+            onClick={() => setFilter("pending")}
+            className={`bg-card rounded-xl p-6 border transition-all text-left ${
+              filter === "pending"
+                ? "border-primary ring-2 ring-primary/20"
+                : "border-border hover:border-primary/50"
+            }`}
+          >
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
                 <svg
@@ -324,18 +380,36 @@ export default function AdminPage() {
                 </svg>
               </div>
               <div>
-                <p className="text-2xl font-bold text-foreground">{pendingCount}</p>
+                <p className="text-2xl font-bold text-foreground">{stats.pending}</p>
                 <p className="text-sm text-muted-foreground">Pendentes</p>
               </div>
             </div>
-          </div>
+          </button>
         </div>
 
         <div className="bg-card rounded-xl shadow-lg border border-border overflow-hidden">
           <div className="p-6 border-b border-border">
-            <h2 className="text-xl font-semibold text-foreground">
-              Lista de Convidados e Confirmações
-            </h2>
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-foreground">
+                Lista de Convidados e Confirmações
+              </h2>
+              {filter !== "all" && (
+                <button
+                  onClick={() => setFilter("all")}
+                  className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                  Limpar filtro
+                </button>
+              )}
+            </div>
+            {filter !== "all" && (
+              <p className="text-sm text-muted-foreground mt-2">
+                Exibindo {filteredGuests.length} de {guests.length} convidados
+              </p>
+            )}
           </div>
 
           <div className="overflow-x-auto">
@@ -357,7 +431,7 @@ export default function AdminPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {guests.map((guest) => {
+                {filteredGuests.map((guest) => {
                   const confirmation = confirmations.find(
                     (c) => c.guestId === guest.id
                   );
@@ -404,7 +478,7 @@ export default function AdminPage() {
                                 >
                                   <path
                                     fillRule="evenodd"
-                                    d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                                    d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414z"
                                     clipRule="evenodd"
                                   />
                                 </svg>
