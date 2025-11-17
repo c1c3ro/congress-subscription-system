@@ -123,7 +123,7 @@ export default function ConfirmationForm({ guest, existingConfirmation }: Confir
               <canvas ref={canvasRef}></canvas>
             </div>
             <p className="text-sm text-muted-foreground mt-4">
-              Apresente este QR Code na entrada do evento
+              <span className="font-bold"> Tire um print </span> e apresente este QR Code na entrada do evento.
             </p>
           </div>
         )}

@@ -69,7 +69,7 @@ export async function DELETE(request: Request) {
       .eq("guest_id", id);
 
     if (confirmError) {
-      console.error("Error deleting confirmation:", confirmError);
+      console.error("Erro ao deletar confirmação:", confirmError);
     }
 
     const { error: guestError } = await supabase
@@ -77,11 +77,13 @@ export async function DELETE(request: Request) {
       .delete()
       .eq("id", id);
 
-    if (guestError) throw guestError;
+    if (guestError) {
+      throw guestError;
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error deleting guest:", error);
+    console.error("Erro ao deletar convidado:", error);
     return NextResponse.json(
       { error: "Erro ao remover convidado" },
       { status: 500 }
