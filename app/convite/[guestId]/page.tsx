@@ -49,11 +49,11 @@ export default async function GuestConfirmationPage({ params }: PageProps) {
           {/* Saudação Personalizada */}
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-foreground mb-3 text-balance">
-              Olá, {guest.name}!
+              Olá, {guest.name}{guest.companion ? "" : "!"}
             </h1>
             {guest.companion && (
               <p className="text-lg text-muted-foreground mb-3">
-                e {guest.companion}
+                e {guest.companion}!
               </p>
             )}
             <p className="text-lg text-muted-foreground text-balance leading-relaxed">
