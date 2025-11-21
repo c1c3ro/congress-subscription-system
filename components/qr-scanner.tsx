@@ -13,6 +13,7 @@ export default function QRScanner({ onScanSuccess }: QRScannerProps) {
   const [isScanning, setIsScanning] = useState(false)
   const scannerRef = useRef<Html5Qrcode | null>(null)
   const [error, setError] = useState("")
+  const isRunningRef = useRef(false)
 
   useEffect(() => {
     const startScanner = async () => {
@@ -28,6 +29,7 @@ export default function QRScanner({ onScanSuccess }: QRScannerProps) {
           },
           (decodedText) => {
             console.log("[v0] QR Code detected:", decodedText)
+            isRunningRef.current = false
             onScanSuccess(decodedText)
             stopScanner()
           },
@@ -36,6 +38,7 @@ export default function QRScanner({ onScanSuccess }: QRScannerProps) {
           },
         )
 
+        isRunningRef.current = true
         setIsScanning(true)
       } catch (err) {
         console.error("[v0] Error starting scanner:", err)
@@ -44,10 +47,11 @@ export default function QRScanner({ onScanSuccess }: QRScannerProps) {
     }
 
     const stopScanner = async () => {
-      if (scannerRef.current) {
+      if (scannerRef.current && isRunningRef.current) {
         try {
           await scannerRef.current.stop()
           scannerRef.current.clear()
+          isRunningRef.current = false
         } catch (err) {
           console.error("[v0] Error stopping scanner:", err)
         }
