@@ -61,10 +61,22 @@ export default function IdentificadorPage() {
 
   const handleScanSuccess = async (decodedText: string) => {
     try {
-      // Extrair o ID do URL do QR code
-      const url = new URL(decodedText)
-      const pathParts = url.pathname.split("/")
-      const guestId = pathParts[pathParts.length - 1]
+      console.log("[v0] QR Code scanned:", decodedText)
+
+      let guestId = decodedText.trim()
+
+      // Check if it's a URL
+      try {
+        const url = new URL(decodedText)
+        const pathParts = url.pathname.split("/")
+        guestId = pathParts[pathParts.length - 1]
+      } catch {
+        // Not a URL, assume it's a direct guest ID
+        // Remove any extra whitespace or characters
+        guestId = decodedText.trim()
+      }
+
+      console.log("[v0] Fetching guest with ID:", guestId)
 
       // Buscar informações do convidado
       const response = await fetch(`/api/identificador/guest?id=${guestId}`)
