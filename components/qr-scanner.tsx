@@ -14,10 +14,21 @@ export default function QRScanner({ onScanSuccess }: QRScannerProps) {
   const scannerRef = useRef<Html5Qrcode | null>(null)
   const [error, setError] = useState("")
   const isRunningRef = useRef(false)
+  const isMountedRef = useRef(true)
 
   useEffect(() => {
+    isMountedRef.current = true
+
     const startScanner = async () => {
       try {
+        if (scannerRef.current) {
+          try {
+            await scannerRef.current.clear()
+          } catch (e) {
+            // Ignore clear errors
+          }
+        }
+
         const scanner = new Html5Qrcode("qr-reader")
         scannerRef.current = scanner
 
@@ -39,10 +50,14 @@ export default function QRScanner({ onScanSuccess }: QRScannerProps) {
         )
 
         isRunningRef.current = true
-        setIsScanning(true)
+        if (isMountedRef.current) {
+          setIsScanning(true)
+        }
       } catch (err) {
         console.error("[v0] Error starting scanner:", err)
-        setError("Erro ao acessar a câmera. Verifique as permissões.")
+        if (isMountedRef.current) {
+          setError("Erro ao acessar a câmera. Verifique as permissões.")
+        }
       }
     }
 
@@ -50,7 +65,7 @@ export default function QRScanner({ onScanSuccess }: QRScannerProps) {
       if (scannerRef.current && isRunningRef.current) {
         try {
           await scannerRef.current.stop()
-          scannerRef.current.clear()
+          await scannerRef.current.clear()
           isRunningRef.current = false
         } catch (err) {
           console.error("[v0] Error stopping scanner:", err)
@@ -61,6 +76,7 @@ export default function QRScanner({ onScanSuccess }: QRScannerProps) {
     startScanner()
 
     return () => {
+      isMountedRef.current = false
       stopScanner()
     }
   }, [onScanSuccess])

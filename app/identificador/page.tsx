@@ -32,6 +32,7 @@ export default function IdentificadorPage() {
   const [loading, setLoading] = useState(false)
   const [guest, setGuest] = useState<Guest | null>(null)
   const [confirmation, setConfirmation] = useState<Confirmation | null>(null)
+  const [scanKey, setScanKey] = useState(0)
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -99,6 +100,7 @@ export default function IdentificadorPage() {
   const handleReset = () => {
     setGuest(null)
     setConfirmation(null)
+    setScanKey((prev) => prev + 1)
   }
 
   if (!isAuthenticated) {
@@ -137,7 +139,7 @@ export default function IdentificadorPage() {
         <h1 className="text-3xl font-bold text-center mb-8">Identificador de Convidados</h1>
 
         {!guest ? (
-          <QRScanner onScanSuccess={handleScanSuccess} />
+          <QRScanner key={scanKey} onScanSuccess={handleScanSuccess} />
         ) : (
           <GuestDisplay guest={guest} confirmation={confirmation} onReset={handleReset} />
         )}
