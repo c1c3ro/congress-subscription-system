@@ -181,7 +181,6 @@ export default function AdminPage() {
     const confirmation = confirmations.find((c) => c.guestId === guest.id)
 
     if (filter === "attended") {
-      console.log("[v0] Guest:", guest.name, "Attended:", confirmation?.attended)
       return confirmation && confirmation.attended === true
     }
 
@@ -441,7 +440,7 @@ export default function AdminPage() {
                                 <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                                   <path
                                     fillRule="evenodd"
-                                    d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414z"
+                                    d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.415-1.415L11 9.586V6z"
                                     clipRule="evenodd"
                                   />
                                 </svg>
@@ -479,7 +478,7 @@ export default function AdminPage() {
                             <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                               <path
                                 fillRule="evenodd"
-                                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L6.586 10l-4.293 4.293a1 1 0 01-1.414-1.414L6.586 8.586l-4.293-4.293a1 1 0 010-1.414z"
+                                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L6.586 10l-4.293-4.293a1 1 0 010-1.414z"
                                 clipRule="evenodd"
                               />
                             </svg>

@@ -29,15 +29,19 @@ export async function GET() {
       confirmed,
       declined,
       pending,
-      attended, // Include attended in stats
+      attended,
     }
 
-    const confirmations = (confirmationsData || []).map((c) => ({
-      guestId: c.guest_id,
-      status: c.status,
-      confirmed: c.status === "confirmed",
-      timestamp: c.confirmed_at || c.created_at,
-    }))
+    const confirmations = (confirmationsData || []).map((c) => {
+      const guest = guestsData?.find((g) => g.id === c.guest_id)
+      return {
+        guestId: c.guest_id,
+        status: c.status,
+        confirmed: c.status === "confirmed",
+        timestamp: c.confirmed_at || c.created_at,
+        attended: guest?.attended || false, // Add attended from guests table
+      }
+    })
 
     return NextResponse.json({
       guests: guestsData || [],
