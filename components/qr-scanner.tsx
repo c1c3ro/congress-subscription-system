@@ -27,8 +27,8 @@ export default function QRScanner({ onScanSuccess }: QRScannerProps) {
           try {
             if (isRunningRef.current) {
               await scannerRef.current.stop()
+              isRunningRef.current = false
             }
-            await scannerRef.current.clear()
           } catch (e) {
             // Silently handle cleanup errors
           }
@@ -50,10 +50,11 @@ export default function QRScanner({ onScanSuccess }: QRScannerProps) {
             }
 
             hasScannedRef.current = true
-            isRunningRef.current = false
 
             stopScanner().then(() => {
-              onScanSuccess(decodedText)
+              if (isMountedRef.current) {
+                onScanSuccess(decodedText)
+              }
             })
           },
           (errorMessage) => {
@@ -77,10 +78,12 @@ export default function QRScanner({ onScanSuccess }: QRScannerProps) {
       if (scannerRef.current && isRunningRef.current) {
         try {
           await scannerRef.current.stop()
-          await scannerRef.current.clear()
           isRunningRef.current = false
         } catch (err) {
-          console.error("Error stopping scanner:", err)
+          // Apenas ignorar erros silenciosamente se scanner já foi parado
+          if (err instanceof Error && !err.message.includes("not running")) {
+            console.error("Error stopping scanner:", err)
+          }
         }
       }
     }
@@ -89,7 +92,9 @@ export default function QRScanner({ onScanSuccess }: QRScannerProps) {
 
     return () => {
       isMountedRef.current = false
-      stopScanner()
+      if (scannerRef.current && isRunningRef.current) {
+        stopScanner()
+      }
     }
   }, [onScanSuccess])
 
