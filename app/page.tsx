@@ -180,6 +180,11 @@ export default function AdminPage() {
 
     const confirmation = confirmations.find((c) => c.guestId === guest.id)
 
+    if (filter === "attended") {
+      console.log("[v0] Guest:", guest.name, "Attended:", confirmation?.attended)
+      return confirmation && confirmation.attended === true
+    }
+
     if (filter === "confirmed") {
       return confirmation && confirmation.confirmed === true
     }
@@ -188,9 +193,6 @@ export default function AdminPage() {
     }
     if (filter === "pending") {
       return !confirmation
-    }
-    if (filter === "attended") {
-      return confirmation && confirmation.attended === true
     }
 
     return true
@@ -395,6 +397,9 @@ export default function AdminPage() {
                     Status
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    Compareceram
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Data
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
@@ -454,6 +459,31 @@ export default function AdminPage() {
                               />
                             </svg>
                             Pendente
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {confirmation?.attended ? (
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-blue-500/10 text-blue-600">
+                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                              <path
+                                fillRule="evenodd"
+                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                            Sim
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-muted text-muted-foreground">
+                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                              <path
+                                fillRule="evenodd"
+                                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L6.586 10l-4.293 4.293a1 1 0 01-1.414-1.414L6.586 8.586l-4.293-4.293a1 1 0 010-1.414z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                            Não
                           </span>
                         )}
                       </td>
