@@ -73,7 +73,6 @@ export default function IdentificadorPage() {
         guestId = pathParts[pathParts.length - 1]
       } catch {
         // Not a URL, assume it's a direct guest ID
-        // Remove any extra whitespace or characters
         guestId = decodedText.trim()
       }
 
@@ -87,6 +86,7 @@ export default function IdentificadorPage() {
       }
 
       const data = await response.json()
+      console.log("[v0] Setting guest data:", data.guest)
       setGuest(data.guest)
       setConfirmation(data.confirmation)
     } catch (err) {
@@ -98,9 +98,11 @@ export default function IdentificadorPage() {
   }
 
   const handleReset = () => {
+    console.log("[v0] Reset clicked - clearing guest data")
     setGuest(null)
     setConfirmation(null)
     setScanKey((prev) => prev + 1)
+    console.log("[v0] Scanner should restart now")
   }
 
   if (!isAuthenticated) {
