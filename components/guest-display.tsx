@@ -6,12 +6,15 @@ import { Badge } from "@/components/ui/badge"
 import { User, Users, CheckCircle2, XCircle, Clock, RotateCcw } from "lucide-react"
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
+import { useState } from "react"
+import { useToast } from "@/hooks/use-toast"
 
 interface Guest {
   id: string
   name: string
   companion?: string
   created_at: string
+  attended?: boolean
 }
 
 interface Confirmation {
@@ -26,9 +29,46 @@ interface GuestDisplayProps {
   guest: Guest
   confirmation: Confirmation | null
   onReset: () => void
+  onAttendanceUpdate?: (guestId: string, attended: boolean) => void
 }
 
-export default function GuestDisplay({ guest, confirmation, onReset }: GuestDisplayProps) {
+export default function GuestDisplay({ guest, confirmation, onReset, onAttendanceUpdate }: GuestDisplayProps) {
+  const [attended, setAttended] = useState(guest.attended || false)
+  const [isUpdating, setIsUpdating] = useState(false)
+  const { toast } = useToast()
+
+  const handleAttendanceToggle = async () => {
+    const newAttendedValue = !attended
+    setIsUpdating(true)
+
+    try {
+      const response = await fetch("/api/attendance", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ guestId: guest.id, attended: newAttendedValue }),
+      })
+
+      if (!response.ok) throw new Error("Erro ao atualizar")
+
+      setAttended(newAttendedValue)
+      onAttendanceUpdate?.(guest.id, newAttendedValue)
+
+      toast({
+        title: newAttendedValue ? "Comparecimento registrado" : "Comparecimento removido",
+        description: `${guest.name} ${newAttendedValue ? "foi marcado como presente" : "foi desmarcado como presente"}.`,
+      })
+    } catch (error) {
+      console.error("Error updating attendance:", error)
+      toast({
+        title: "Erro",
+        description: "Não foi possível atualizar o comparecimento.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsUpdating(false)
+    }
+  }
+
   const getStatusInfo = () => {
     if (!confirmation) {
       return {
@@ -83,6 +123,30 @@ export default function GuestDisplay({ guest, confirmation, onReset }: GuestDisp
         </div>
 
         <div className="space-y-4">
+          <div
+            className={`rounded-lg p-6 border-2 ${attended ? "bg-green-500/10 border-green-500/30" : "bg-muted border-border"}`}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-semibold text-lg">Comparecimento ao Evento</h3>
+              <button
+                onClick={handleAttendanceToggle}
+                disabled={isUpdating}
+                className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${
+                  attended ? "bg-green-600" : "bg-input"
+                }`}
+              >
+                <span
+                  className={`inline-block h-6 w-6 transform rounded-full bg-background shadow-lg transition-transform ${
+                    attended ? "translate-x-7" : "translate-x-1"
+                  }`}
+                />
+              </button>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              {attended ? "Este convidado compareceu ao evento" : "Marque se o convidado comparecer ao evento"}
+            </p>
+          </div>
+
           <div className={`${statusInfo.bgColor} ${statusInfo.textColor} rounded-lg p-6`}>
             <h3 className="font-semibold text-lg mb-2">Status do Convite</h3>
             <p className="text-sm">

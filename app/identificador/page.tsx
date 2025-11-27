@@ -16,6 +16,7 @@ interface Guest {
   name: string
   companion?: string
   created_at: string
+  attended?: boolean // Added attended field
 }
 
 interface Confirmation {
@@ -139,6 +140,13 @@ export default function IdentificadorPage() {
   const handleSelectGuest = (guest: GuestWithConfirmation) => {
     setSelectedGuest(guest)
     setViewMode("scanner")
+  }
+
+  const handleAttendanceUpdate = (guestId: string, attended: boolean) => {
+    setAllGuests((prevGuests) => prevGuests.map((g) => (g.id === guestId ? { ...g, attended } : g)))
+    if (selectedGuest && selectedGuest.id === guestId) {
+      setSelectedGuest({ ...selectedGuest, attended })
+    }
   }
 
   const handleReset = () => {
@@ -291,6 +299,7 @@ export default function IdentificadorPage() {
                 : null
             }
             onReset={handleReset}
+            onAttendanceUpdate={handleAttendanceUpdate}
           />
         )}
       </div>
