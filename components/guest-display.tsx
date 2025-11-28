@@ -136,7 +136,7 @@ export default function GuestDisplay({ guest, confirmation, onReset, onAttendanc
             className={`rounded-lg p-4 md:p-6 border-2 transition-colors ${
               attended
                 ? "bg-emerald-50 dark:bg-emerald-950/30 border-emerald-500"
-                : "bg-slate-50/50 dark:bg-slate-900/30 border-slate-200 dark:border-slate-700"
+                : "bg-emerald-50 dark:bg-slate-900/30 border-slate-200 dark:border-slate-700"
             }`}
           >
             <div className="flex items-start justify-between gap-3 mb-3">
