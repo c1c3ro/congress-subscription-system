@@ -135,7 +135,7 @@ export default function GuestDisplay({ guest, confirmation, onReset, onAttendanc
           <div
             className={`rounded-lg p-4 md:p-6 border-2 transition-colors ${
               attended
-                ? "bg-emerald-50 dark:bg-emerald-950/30 border-emerald-500"
+                ? "bg-emerald-50 dark:bg-gray-50 border-emerald-500"
                 : "bg-gray-50 dark:bg-gray-100 border-gray-200 dark:border-gray-300"
             }`}
           >
