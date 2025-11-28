@@ -16,6 +16,7 @@ export default function QRScanner({ onScanSuccess }: QRScannerProps) {
   const isRunningRef = useRef(false)
   const isMountedRef = useRef(true)
   const hasScannedRef = useRef(false)
+  const isStoppingRef = useRef(false)
 
   useEffect(() => {
     isMountedRef.current = true
@@ -25,9 +26,8 @@ export default function QRScanner({ onScanSuccess }: QRScannerProps) {
       try {
         if (scannerRef.current) {
           try {
-            if (isRunningRef.current) {
-              await scannerRef.current.stop()
-              isRunningRef.current = false
+            if (isRunningRef.current && !isStoppingRef.current) {
+              await stopScanner()
             }
           } catch (e) {
             // Silently handle cleanup errors
@@ -75,16 +75,27 @@ export default function QRScanner({ onScanSuccess }: QRScannerProps) {
     }
 
     const stopScanner = async () => {
-      if (scannerRef.current && isRunningRef.current) {
-        try {
+      if (!scannerRef.current || !isRunningRef.current || isStoppingRef.current) {
+        return
+      }
+
+      isStoppingRef.current = true
+
+      try {
+        const state = await scannerRef.current.getState()
+
+        // Only stop if scanner is actually running or paused
+        if (state === 2 || state === 3) {
+          // 2 = SCANNING, 3 = PAUSED
           await scannerRef.current.stop()
-          isRunningRef.current = false
-        } catch (err) {
-          // Apenas ignorar erros silenciosamente se scanner já foi parado
-          if (err instanceof Error && !err.message.includes("not running")) {
-            console.error("Error stopping scanner:", err)
-          }
         }
+
+        isRunningRef.current = false
+      } catch (err) {
+        // Silently handle stop errors - scanner might already be stopped
+        isRunningRef.current = false
+      } finally {
+        isStoppingRef.current = false
       }
     }
 
