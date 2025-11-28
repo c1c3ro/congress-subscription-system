@@ -207,27 +207,29 @@ export default function IdentificadorPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent p-4">
-      <div className="container mx-auto max-w-6xl py-8">
-        <h1 className="text-3xl font-bold text-center mb-8">Identificador de Convidados</h1>
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent p-3 md:p-4">
+      <div className="container mx-auto max-w-6xl py-4 md:py-8">
+        <h1 className="text-2xl md:text-3xl font-bold text-center mb-6 md:mb-8">Identificador de Convidados</h1>
 
         {!selectedGuest && (
-          <div className="flex justify-center gap-2 mb-6">
+          <div className="flex justify-center gap-2 mb-4 md:mb-6">
             <Button
               variant={viewMode === "scanner" ? "default" : "outline"}
               onClick={() => setViewMode("scanner")}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 text-sm md:text-base"
             >
               <Camera className="w-4 h-4" />
-              Scanner QR Code
+              <span className="hidden sm:inline">Scanner QR Code</span>
+              <span className="sm:hidden">Scanner</span>
             </Button>
             <Button
               variant={viewMode === "list" ? "default" : "outline"}
               onClick={() => setViewMode("list")}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 text-sm md:text-base"
             >
               <List className="w-4 h-4" />
-              Lista de Convidados
+              <span className="hidden sm:inline">Lista de Convidados</span>
+              <span className="sm:hidden">Lista</span>
             </Button>
           </div>
         )}

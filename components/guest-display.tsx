@@ -102,19 +102,28 @@ export default function GuestDisplay({ guest, confirmation, onReset, onAttendanc
   const statusInfo = getStatusInfo()
 
   return (
-    <div className="space-y-4">
-      <Card className="p-8">
-        <div className="flex items-center justify-between mb-6">
+    <div className="space-y-3 md:space-y-4">
+      <Card className="p-4 md:p-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div className="flex items-center gap-3">
-            <div className="bg-primary/10 p-3 rounded-full">
-              {guest.companion ? <Users className="w-8 h-8 text-primary" /> : <User className="w-8 h-8 text-primary" />}
+            <div className="bg-primary/10 p-2 md:p-3 rounded-full shrink-0">
+              {guest.companion ? (
+                <Users className="w-6 h-6 md:w-8 md:h-8 text-primary" />
+              ) : (
+                <User className="w-6 h-6 md:w-8 md:h-8 text-primary" />
+              )}
             </div>
-            <div>
-              <h2 className="text-2xl font-bold">{guest.name}</h2>
-              {guest.companion && <p className="text-lg text-muted-foreground">e {guest.companion}</p>}
+            <div className="min-w-0">
+              <h2 className="text-xl md:text-2xl font-bold break-words">{guest.name}</h2>
+              {guest.companion && (
+                <p className="text-base md:text-lg text-muted-foreground break-words">e {guest.companion}</p>
+              )}
             </div>
           </div>
-          <Badge variant={statusInfo.variant} className="text-base px-4 py-2">
+          <Badge
+            variant={statusInfo.variant}
+            className="text-sm md:text-base px-3 py-1.5 md:px-4 md:py-2 self-start sm:self-auto"
+          >
             <span className="flex items-center gap-2">
               {statusInfo.icon}
               {statusInfo.label}
@@ -122,34 +131,41 @@ export default function GuestDisplay({ guest, confirmation, onReset, onAttendanc
           </Badge>
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-3 md:space-y-4">
           <div
-            className={`rounded-lg p-6 border-2 ${attended ? "bg-green-500/10 border-green-500/30" : "bg-muted border-border"}`}
+            className={`rounded-lg p-4 md:p-6 border-2 transition-colors ${
+              attended
+                ? "bg-emerald-50 dark:bg-emerald-950/30 border-emerald-500"
+                : "bg-slate-50 dark:bg-slate-900/50 border-slate-300 dark:border-slate-700"
+            }`}
           >
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="font-semibold text-lg">Comparecimento ao Evento</h3>
+            <div className="flex items-start justify-between gap-3 mb-3">
+              <h3 className="font-semibold text-base md:text-lg">Comparecimento ao Evento</h3>
               <button
                 onClick={handleAttendanceToggle}
                 disabled={isUpdating}
-                className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${
-                  attended ? "bg-green-600" : "bg-input"
+                className={`relative inline-flex h-10 w-[72px] shrink-0 items-center rounded-full transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 shadow-sm ${
+                  attended
+                    ? "bg-emerald-600 hover:bg-emerald-700"
+                    : "bg-slate-300 dark:bg-slate-600 hover:bg-slate-400 dark:hover:bg-slate-500"
                 }`}
+                aria-label={attended ? "Marcar como não presente" : "Marcar como presente"}
               >
                 <span
-                  className={`inline-block h-6 w-6 transform rounded-full bg-background shadow-lg transition-transform ${
-                    attended ? "translate-x-7" : "translate-x-1"
+                  className={`inline-block h-8 w-8 transform rounded-full bg-white shadow-lg ring-2 transition-transform duration-200 ${
+                    attended ? "translate-x-9 ring-emerald-600" : "translate-x-1 ring-slate-400 dark:ring-slate-500"
                   }`}
                 />
               </button>
             </div>
-            <p className="text-sm text-muted-foreground">
-              {attended ? "Este convidado compareceu ao evento" : "Marque se o convidado comparecer ao evento"}
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              {attended ? "✓ Este convidado compareceu ao evento" : "Ative o botão quando o convidado chegar ao evento"}
             </p>
           </div>
 
-          <div className={`${statusInfo.bgColor} ${statusInfo.textColor} rounded-lg p-6`}>
-            <h3 className="font-semibold text-lg mb-2">Status do Convite</h3>
-            <p className="text-sm">
+          <div className={`${statusInfo.bgColor} ${statusInfo.textColor} rounded-lg p-4 md:p-6`}>
+            <h3 className="font-semibold text-base md:text-lg mb-2">Status do Convite</h3>
+            <p className="text-sm leading-relaxed">
               {!confirmation && "Este convidado ainda não respondeu ao convite."}
               {confirmation?.status === "confirmed" &&
                 `Confirmado em ${format(new Date(confirmation.confirmed_at || confirmation.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}`}
@@ -158,18 +174,18 @@ export default function GuestDisplay({ guest, confirmation, onReset, onAttendanc
             </p>
           </div>
 
-          <div className="bg-accent rounded-lg p-6 border border-primary/20">
-            <h3 className="font-semibold mb-3">Informações do Convite</h3>
+          <div className="bg-accent rounded-lg p-4 md:p-6 border border-primary/20">
+            <h3 className="font-semibold mb-3 text-base md:text-lg">Informações do Convite</h3>
             <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
+              <div className="flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-2">
                 <span className="text-muted-foreground">ID do Convidado:</span>
-                <span className="font-mono">{guest.id}</span>
+                <span className="font-mono text-xs sm:text-sm break-all">{guest.id}</span>
               </div>
-              <div className="flex justify-between">
+              <div className="flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-2">
                 <span className="text-muted-foreground">Tipo:</span>
                 <span>{guest.companion ? "Convite Duplo" : "Convite Individual"}</span>
               </div>
-              <div className="flex justify-between">
+              <div className="flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-2">
                 <span className="text-muted-foreground">Cadastrado em:</span>
                 <span>{format(new Date(guest.created_at), "dd/MM/yyyy", { locale: ptBR })}</span>
               </div>
@@ -178,7 +194,7 @@ export default function GuestDisplay({ guest, confirmation, onReset, onAttendanc
         </div>
       </Card>
 
-      <Button onClick={onReset} className="w-full" size="lg">
+      <Button onClick={onReset} className="w-full text-base" size="lg">
         <RotateCcw className="w-5 h-5 mr-2" />
         Escanear Novo QR Code
       </Button>
