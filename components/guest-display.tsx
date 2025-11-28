@@ -136,7 +136,7 @@ export default function GuestDisplay({ guest, confirmation, onReset, onAttendanc
             className={`rounded-lg p-4 md:p-6 border-2 transition-colors ${
               attended
                 ? "bg-emerald-50 dark:bg-emerald-950/30 border-emerald-500"
-                : "bg-emerald-50 dark:bg-slate-900/30 border-slate-200 dark:border-slate-700"
+                : "bg-gray-50 dark:bg-gray-100 border-gray-200 dark:border-gray-300"
             }`}
           >
             <div className="flex items-start justify-between gap-3 mb-3">
@@ -158,7 +158,7 @@ export default function GuestDisplay({ guest, confirmation, onReset, onAttendanc
                 />
               </button>
             </div>
-            <p className="text-sm text-muted-foreground leading-relaxed">
+            <p className="text-sm text-slate-700 dark:text-slate-900 leading-relaxed">
               {attended ? "✓ Este convidado compareceu ao evento" : "Ative o botão quando o convidado chegar ao evento"}
             </p>
           </div>
