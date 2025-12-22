@@ -3,7 +3,6 @@
 import type React from "react"
 
 import { useState } from "react"
-import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import type { Guest, Confirmation } from "@/lib/guests"
 
@@ -125,14 +124,16 @@ export default function AdminPage() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-secondary/10 via-background to-muted flex items-center justify-center p-4">
         <div className="w-full max-w-md">
-          <div className="flex justify-center mb-8">
-            <Image
-              src="/logo.webp"
-              alt="Núcleo de Carreira em Saúde"
-              width={300}
-              height={90}
-              className="w-full max-w-xs"
-            />
+          <div className="flex justify-center items-center gap-3 mb-8">
+            <svg className="w-10 h-10 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              />
+            </svg>
+            <h1 className="text-3xl font-bold text-primary">Sistema de Confirmação</h1>
           </div>
 
           <div className="bg-card rounded-2xl shadow-xl p-8 border border-border">
@@ -350,7 +351,7 @@ export default function AdminPage() {
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth={2}
-                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                    d="M9 12l2 2 4-4m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                   />
                 </svg>
               </div>

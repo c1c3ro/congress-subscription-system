@@ -1,43 +1,44 @@
-import type { Metadata } from 'next'
-import { Geist, Geist_Mono } from 'next/font/google'
-import { Analytics } from '@vercel/analytics/next'
-import './globals.css'
+import type React from "react"
+import type { Metadata } from "next"
+import { Geist, Geist_Mono } from "next/font/google"
+import { Analytics } from "@vercel/analytics/next"
+import "./globals.css"
 
-const _geist = Geist({ subsets: ["latin"] });
-const _geistMono = Geist_Mono({ subsets: ["latin"] });
+const _geist = Geist({ subsets: ["latin"] })
+const _geistMono = Geist_Mono({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: 'Lançamento - NCS',
-  description: 'Confirme sua presença no lançamento do Núcleo de Carreira em Saúde',
-  generator: '',
+  title: "Sistema de Confirmação - Teste",
+  description: "Sistema de teste para confirmação de presença em eventos",
+  generator: "",
   icons: {
     icon: [
       {
-        url: '/ogimage.webp',
-        media: '(prefers-color-scheme: light)',
+        url: "/ogimage.webp",
+        media: "(prefers-color-scheme: light)",
       },
       {
-        url: '/ogimage.webp',
-        media: '(prefers-color-scheme: dark)',
+        url: "/ogimage.webp",
+        media: "(prefers-color-scheme: dark)",
       },
       {
-        url: '/icon.svg',
-        type: 'image/svg+xml',
+        url: "/icon.svg",
+        type: "image/svg+xml",
       },
     ],
-    apple: '/apple-icon.png',
+    apple: "/apple-icon.png",
   },
   openGraph: {
-    title: 'Lançamento - NCS',               // pode personalizar
-    description: 'Confirme sua presença no lançamento do Núcleo de Carreira em Saúde',// idem
-    url: 'lancamento-ncs.vercel.app',// coloque o domínio real
+    title: "Sistema de Confirmação - Teste",
+    description: "Sistema de teste para confirmação de presença em eventos",
+    url: "lancamento-ncs.vercel.app",
     images: [
       {
-        url: '/ogimage.webp', // ou '/og-image.jpg' se estiver no public/
-        alt: 'Imagem de pré-visualização OG'
-      }
+        url: "/ogimage.webp",
+        alt: "Imagem de pré-visualização OG",
+      },
     ],
-    siteName: 'Lançamento - NCS'
+    siteName: "Sistema de Confirmação - Teste",
   },
 }
 

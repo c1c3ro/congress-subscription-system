@@ -1,6 +1,5 @@
 import { notFound } from "next/navigation"
 import ConfirmationForm from "@/components/confirmation-form"
-import Image from "next/image"
 import { createClient } from "@/lib/supabase/server"
 
 interface PageProps {
@@ -28,15 +27,16 @@ export default async function GuestConfirmationPage({ params }: PageProps) {
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent">
       <div className="container mx-auto px-4 py-12 max-w-2xl">
         {/* Logo */}
-        <div className="flex justify-center mb-8">
-          <Image
-            src="/logo.webp"
-            alt="Núcleo de Carreira em Saúde"
-            width={350}
-            height={100}
-            className="w-9/12 max-w-sm"
-            priority
-          />
+        <div className="flex justify-center items-center gap-3 mb-8">
+          <svg className="w-12 h-12 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+            />
+          </svg>
+          <h1 className="text-4xl font-bold text-primary">Sistema de Confirmação</h1>
         </div>
 
         {/* Card Principal */}
@@ -50,7 +50,7 @@ export default async function GuestConfirmationPage({ params }: PageProps) {
             {guest.companion && <p className="text-lg text-muted-foreground mb-3">e {guest.companion}!</p>}
             <p className="text-lg text-muted-foreground text-balance leading-relaxed">
               {guest.companion ? "Vocês estão convidados" : "Você está convidado(a)"} para o evento de lançamento do{" "}
-              <span className="font-semibold text-primary">Núcleo de Carreira em Saúde</span>
+              <span className="font-semibold text-primary">Evento de Teste</span>
             </p>
           </div>
 
