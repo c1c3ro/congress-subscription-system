@@ -151,6 +151,7 @@ export default function IdentificadorPage() {
 
   const handleReset = () => {
     setSelectedGuest(null)
+    setViewMode("scanner")
     setScanKey((prev) => prev + 1)
   }
 
