@@ -11,7 +11,7 @@ export async function POST(request: Request) {
 
     const supabase = await createClient()
 
-    const { data, error } = await supabase.from("guests").update({ attended }).eq("id", guestId).select().single()
+    const { data, error } = await supabase.from("test_guests").update({ attended }).eq("id", guestId).select().single()
 
     if (error) throw error
 

@@ -1,33 +1,28 @@
-import { notFound } from 'next/navigation';
-import ConfirmationForm from "@/components/confirmation-form";
-import Image from "next/image";
-import { createClient } from "@/lib/supabase/server";
+import { notFound } from "next/navigation"
+import ConfirmationForm from "@/components/confirmation-form"
+import Image from "next/image"
+import { createClient } from "@/lib/supabase/server"
 
 interface PageProps {
-  params: Promise<{ guestId: string }>;
+  params: Promise<{ guestId: string }>
 }
 
 export default async function GuestConfirmationPage({ params }: PageProps) {
-  const { guestId } = await params;
-  
-  const supabase = await createClient();
-  
-  const { data: guest } = await supabase
-    .from("guests")
-    .select("*")
-    .eq("id", guestId)
-    .single();
+  const { guestId } = await params
+
+  const supabase = await createClient()
+
+  const { data: guest } = await supabase.from("test_guests").select("*").eq("id", guestId).single()
 
   if (!guest) {
-    notFound();
+    notFound()
   }
 
-  // Verificar se já existe uma confirmação
   const { data: existingConfirmation } = await supabase
-    .from("confirmations")
+    .from("test_confirmations")
     .select("*")
     .eq("guest_id", guestId)
-    .maybeSingle();
+    .maybeSingle()
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent">
@@ -49,26 +44,19 @@ export default async function GuestConfirmationPage({ params }: PageProps) {
           {/* Saudação Personalizada */}
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-foreground mb-3 text-balance">
-              Olá, {guest.name}{guest.companion ? "" : "!"}
+              Olá, {guest.name}
+              {guest.companion ? "" : "!"}
             </h1>
-            {guest.companion && (
-              <p className="text-lg text-muted-foreground mb-3">
-                e {guest.companion}!
-              </p>
-            )}
+            {guest.companion && <p className="text-lg text-muted-foreground mb-3">e {guest.companion}!</p>}
             <p className="text-lg text-muted-foreground text-balance leading-relaxed">
               {guest.companion ? "Vocês estão convidados" : "Você está convidado(a)"} para o evento de lançamento do{" "}
-              <span className="font-semibold text-primary">
-                Núcleo de Carreira em Saúde
-              </span>
+              <span className="font-semibold text-primary">Núcleo de Carreira em Saúde</span>
             </p>
           </div>
 
           {/* Informações do Evento */}
           <div className="bg-accent rounded-xl p-6 mb-8 border border-primary/20">
-            <h2 className="font-semibold text-accent-foreground mb-4 text-lg">
-              Detalhes do Evento
-            </h2>
+            <h2 className="font-semibold text-accent-foreground mb-4 text-lg">Detalhes do Evento</h2>
             <div className="space-y-3 text-sm">
               <div className="flex items-start gap-3">
                 <svg
@@ -111,9 +99,7 @@ export default async function GuestConfirmationPage({ params }: PageProps) {
                 </svg>
                 <div>
                   <p className="font-medium text-foreground">Local</p>
-                  <p className="text-muted-foreground">
-                    Rua Catulo da Paixão Cearense, 175 - Pátio Cariri, 31º andar
-                  </p>
+                  <p className="text-muted-foreground">Rua Catulo da Paixão Cearense, 175 - Pátio Cariri, 31º andar</p>
                 </div>
               </div>
             </div>
@@ -124,10 +110,8 @@ export default async function GuestConfirmationPage({ params }: PageProps) {
         </div>
 
         {/* Footer */}
-        <p className="text-center text-sm text-muted-foreground mt-8">
-          Estamos ansiosos para contar com sua presença!
-        </p>
+        <p className="text-center text-sm text-muted-foreground mt-8">Estamos ansiosos para contar com sua presença!</p>
       </div>
     </div>
-  );
+  )
 }

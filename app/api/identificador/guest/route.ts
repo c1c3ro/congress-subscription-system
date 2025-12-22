@@ -12,16 +12,14 @@ export async function GET(request: Request) {
 
     const supabase = await createClient()
 
-    // Buscar informações do convidado
-    const { data: guest, error: guestError } = await supabase.from("guests").select("*").eq("id", guestId).single()
+    const { data: guest, error: guestError } = await supabase.from("test_guests").select("*").eq("id", guestId).single()
 
     if (guestError || !guest) {
       return NextResponse.json({ error: "Convidado não encontrado" }, { status: 404 })
     }
 
-    // Buscar confirmação do convidado
     const { data: confirmation } = await supabase
-      .from("confirmations")
+      .from("test_confirmations")
       .select("*")
       .eq("guest_id", guestId)
       .maybeSingle()

@@ -6,13 +6,13 @@ export async function GET() {
     const supabase = await createClient()
 
     const { data: guestsData, error: guestsError } = await supabase
-      .from("guests")
+      .from("test_guests")
       .select("*")
       .order("created_at", { ascending: true })
 
     if (guestsError) throw guestsError
 
-    const { data: confirmationsData, error: confirmationsError } = await supabase.from("confirmations").select("*")
+    const { data: confirmationsData, error: confirmationsError } = await supabase.from("test_confirmations").select("*")
 
     if (confirmationsError) throw confirmationsError
 
