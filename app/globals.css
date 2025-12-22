@@ -1,0 +1,49 @@
+@import 'tailwindcss';
+
+@theme inline {
+  --font-sans: 'Geist', 'Geist Fallback';
+  --font-mono: 'Geist Mono', 'Geist Mono Fallback';
+  
+  /* Primary brand color - Rosa vibrante do logo */
+  --color-primary: #c15b7c;
+  --color-primary-foreground: #ffffff;
+  
+  /* Secondary - Cinza moderno */
+  --color-secondary: #4a5568;
+  --color-secondary-foreground: #ffffff;
+  
+  /* Background colors */
+  --color-background: #ffffff;
+  --color-foreground: #2d3748;
+  
+  /* Muted colors for subtle elements */
+  --color-muted: #f7fafc;
+  --color-muted-foreground: #718096;
+  
+  /* Card styling */
+  --color-card: #ffffff;
+  --color-card-foreground: #2d3748;
+  
+  /* Border */
+  --color-border: #e2e8f0;
+  
+  /* Accent - Rosa mais suave */
+  --color-accent: #fdf2f8;
+  --color-accent-foreground: #831843;
+  
+  /* Success/Destructive */
+  --color-success: #48bb78;
+  --color-destructive: #f56565;
+  --color-destructive-foreground: #ffffff;
+  
+  --radius: 0.5rem;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
