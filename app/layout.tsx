@@ -11,33 +11,9 @@ export const metadata: Metadata = {
   title: "Sistema de Confirmação - Teste",
   description: "Sistema de teste para confirmação de presença em eventos",
   generator: "",
-  icons: {
-    icon: [
-      {
-        url: "/ogimage.webp",
-        media: "(prefers-color-scheme: light)",
-      },
-      {
-        url: "/ogimage.webp",
-        media: "(prefers-color-scheme: dark)",
-      },
-      {
-        url: "/icon.svg",
-        type: "image/svg+xml",
-      },
-    ],
-    apple: "/apple-icon.png",
-  },
   openGraph: {
     title: "Sistema de Confirmação - Teste",
     description: "Sistema de teste para confirmação de presença em eventos",
-    url: "lancamento-ncs.vercel.app",
-    images: [
-      {
-        url: "/ogimage.webp",
-        alt: "Imagem de pré-visualização OG",
-      },
-    ],
     siteName: "Sistema de Confirmação - Teste",
   },
 }
