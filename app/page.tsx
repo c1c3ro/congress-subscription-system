@@ -59,9 +59,9 @@ export default function AdminPage() {
     try {
       const response = await fetch("/api/admin/data")
       const data = await response.json()
-      setGuests(data.guests)
-      setConfirmations(data.confirmations)
-      setStats(data.stats)
+      setGuests(data.guests || [])
+      setConfirmations(data.confirmations || [])
+      setStats(data.stats || { confirmed: 0, declined: 0, pending: 0, attended: 0 })
     } catch (error) {
       console.error("Error loading data:", error)
     }
@@ -176,10 +176,10 @@ export default function AdminPage() {
     )
   }
 
-  const filteredGuests = guests.filter((guest) => {
+  const filteredGuests = (guests || []).filter((guest) => {
     if (filter === "all") return true
 
-    const confirmation = confirmations.find((c) => c.guestId === guest.id)
+    const confirmation = (confirmations || []).find((c) => c.guestId === guest.id)
 
     if (filter === "attended") {
       return confirmation && confirmation.attended === true
