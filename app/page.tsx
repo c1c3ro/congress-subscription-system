@@ -1,75 +1,78 @@
-"use client";
+"use client"
 
-import { useState, useEffect } from "react";
-import Image from "next/image";
-import { Button } from "@/components/ui/button";
-import type { Guest, Confirmation } from "@/lib/guests";
+import type React from "react"
 
-type FilterType = "all" | "confirmed" | "declined" | "pending";
+import { useState } from "react"
+import Image from "next/image"
+import { Button } from "@/components/ui/button"
+import type { Guest, Confirmation } from "@/lib/guests"
+
+type FilterType = "all" | "confirmed" | "declined" | "pending" | "attended"
 
 interface Stats {
-  confirmed: number;
-  declined: number;
-  pending: number;
+  confirmed: number
+  declined: number
+  pending: number
+  attended: number
 }
 
 export default function AdminPage() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [guests, setGuests] = useState<Guest[]>([]);
-  const [confirmations, setConfirmations] = useState<Confirmation[]>([]);
-  const [stats, setStats] = useState<Stats>({ confirmed: 0, declined: 0, pending: 0 });
-  const [isLoading, setIsLoading] = useState(false);
-  
-  const [newGuestName, setNewGuestName] = useState("");
-  const [newGuestCompanion, setNewGuestCompanion] = useState("");
-  const [isAddingGuest, setIsAddingGuest] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [password, setPassword] = useState("")
+  const [error, setError] = useState("")
+  const [guests, setGuests] = useState<Guest[]>([])
+  const [confirmations, setConfirmations] = useState<Confirmation[]>([])
+  const [stats, setStats] = useState<Stats>({ confirmed: 0, declined: 0, pending: 0, attended: 0 })
+  const [isLoading, setIsLoading] = useState(false)
 
-  const [filter, setFilter] = useState<FilterType>("all");
+  const [newGuestName, setNewGuestName] = useState("")
+  const [newGuestCompanion, setNewGuestCompanion] = useState("")
+  const [isAddingGuest, setIsAddingGuest] = useState(false)
+
+  const [filter, setFilter] = useState<FilterType>("all")
 
   const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    setIsLoading(true);
+    e.preventDefault()
+    setError("")
+    setIsLoading(true)
 
     try {
       const response = await fetch("/api/admin/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ password }),
-      });
+      })
 
       if (response.ok) {
-        setIsAuthenticated(true);
-        loadData();
+        setIsAuthenticated(true)
+        loadData()
       } else {
-        setError("Senha incorreta");
+        setError("Senha incorreta")
       }
     } catch (error) {
-      setError("Erro ao autenticar");
+      setError("Erro ao autenticar")
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   const loadData = async () => {
     try {
-      const response = await fetch("/api/admin/data");
-      const data = await response.json();
-      setGuests(data.guests);
-      setConfirmations(data.confirmations);
-      setStats(data.stats);
+      const response = await fetch("/api/admin/data")
+      const data = await response.json()
+      setGuests(data.guests)
+      setConfirmations(data.confirmations)
+      setStats(data.stats)
     } catch (error) {
-      console.error("Error loading data:", error);
+      console.error("Error loading data:", error)
     }
-  };
+  }
 
   const handleAddGuest = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newGuestName.trim()) return;
+    e.preventDefault()
+    if (!newGuestName.trim()) return
 
-    setIsAddingGuest(true);
+    setIsAddingGuest(true)
     try {
       const response = await fetch("/api/guests", {
         method: "POST",
@@ -78,45 +81,45 @@ export default function AdminPage() {
           name: newGuestName.trim(),
           companion: newGuestCompanion.trim() || null,
         }),
-      });
+      })
 
       if (response.ok) {
-        setNewGuestName("");
-        setNewGuestCompanion("");
-        loadData();
+        setNewGuestName("")
+        setNewGuestCompanion("")
+        loadData()
       }
     } catch (error) {
-      console.error("Error adding guest:", error);
-      alert("Erro ao adicionar convidado");
+      console.error("Error adding guest:", error)
+      alert("Erro ao adicionar convidado")
     } finally {
-      setIsAddingGuest(false);
+      setIsAddingGuest(false)
     }
-  };
+  }
 
   const handleRemoveGuest = async (guestId: string) => {
-    if (!confirm("Tem certeza que deseja remover este convidado?")) return;
+    if (!confirm("Tem certeza que deseja remover este convidado?")) return
 
     try {
       const response = await fetch(`/api/guests?id=${guestId}`, {
         method: "DELETE",
-      });
+      })
 
       if (response.ok) {
-        await loadData(); // Recarregar dados imediatamente após exclusão bem-sucedida
+        await loadData() // Recarregar dados imediatamente após exclusão bem-sucedida
       } else {
-        alert("Erro ao remover convidado");
+        alert("Erro ao remover convidado")
       }
     } catch (error) {
-      console.error("Error removing guest:", error);
-      alert("Erro ao remover convidado");
+      console.error("Error removing guest:", error)
+      alert("Erro ao remover convidado")
     }
-  };
+  }
 
   const copyInviteLink = (guestId: string) => {
-    const link = `${window.location.origin}/convite/${guestId}`;
-    navigator.clipboard.writeText(link);
-    alert("Link copiado para a área de transferência!");
-  };
+    const link = `${window.location.origin}/convite/${guestId}`
+    navigator.clipboard.writeText(link)
+    alert("Link copiado para a área de transferência!")
+  }
 
   if (!isAuthenticated) {
     return (
@@ -133,19 +136,12 @@ export default function AdminPage() {
           </div>
 
           <div className="bg-card rounded-2xl shadow-xl p-8 border border-border">
-            <h1 className="text-2xl font-bold text-foreground mb-2 text-center">
-              Painel Administrativo
-            </h1>
-            <p className="text-muted-foreground text-center mb-6 text-sm">
-              Digite a senha para acessar
-            </p>
+            <h1 className="text-2xl font-bold text-foreground mb-2 text-center">Painel Administrativo</h1>
+            <p className="text-muted-foreground text-center mb-6 text-sm">Digite a senha para acessar</p>
 
             <form onSubmit={handleLogin} className="space-y-4">
               <div>
-                <label
-                  htmlFor="password"
-                  className="block text-sm font-medium text-foreground mb-2"
-                >
+                <label htmlFor="password" className="block text-sm font-medium text-foreground mb-2">
                   Senha
                 </label>
                 <input
@@ -176,50 +172,41 @@ export default function AdminPage() {
           </div>
         </div>
       </div>
-    );
+    )
   }
 
   const filteredGuests = guests.filter((guest) => {
-    if (filter === "all") return true;
-    
-    const confirmation = confirmations.find((c) => c.guestId === guest.id);
-    
+    if (filter === "all") return true
+
+    const confirmation = confirmations.find((c) => c.guestId === guest.id)
+
+    if (filter === "attended") {
+      return confirmation && confirmation.attended === true
+    }
+
     if (filter === "confirmed") {
-      return confirmation && confirmation.confirmed === true;
+      return confirmation && confirmation.confirmed === true
     }
     if (filter === "declined") {
-      return confirmation && confirmation.confirmed === false;
+      return confirmation && confirmation.confirmed === false
     }
     if (filter === "pending") {
-      return !confirmation;
+      return !confirmation
     }
-    
-    return true;
-  });
+
+    return true
+  })
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-secondary/10 via-background to-muted">
       <div className="container mx-auto px-4 py-12 max-w-6xl">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-foreground mb-2">
-              Painel Administrativo
-            </h1>
-            <p className="text-muted-foreground">
-              Gerenciamento de confirmações do evento
-            </p>
+            <h1 className="text-3xl font-bold text-foreground mb-2">Painel Administrativo</h1>
+            <p className="text-muted-foreground">Gerenciamento de confirmações do evento</p>
           </div>
-          <Button
-            onClick={() => setIsAuthenticated(false)}
-            variant="outline"
-            className="flex items-center gap-2"
-          >
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
+          <Button onClick={() => setIsAuthenticated(false)} variant="outline" className="flex items-center gap-2">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -232,9 +219,7 @@ export default function AdminPage() {
         </div>
 
         <div className="bg-card rounded-xl shadow-lg border border-border p-6 mb-8">
-          <h2 className="text-xl font-semibold text-foreground mb-4">
-            Adicionar Novo Convidado
-          </h2>
+          <h2 className="text-xl font-semibold text-foreground mb-4">Adicionar Novo Convidado</h2>
           <form onSubmit={handleAddGuest} className="flex gap-3 flex-wrap">
             <input
               type="text"
@@ -261,23 +246,16 @@ export default function AdminPage() {
           </form>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
           <button
             onClick={() => setFilter("all")}
             className={`bg-card rounded-xl p-6 border transition-all text-left ${
-              filter === "all"
-                ? "border-primary ring-2 ring-primary/20"
-                : "border-border hover:border-primary/50"
+              filter === "all" ? "border-primary ring-2 ring-primary/20" : "border-border hover:border-primary/50"
             }`}
           >
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
-                <svg
-                  className="w-6 h-6 text-foreground"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
+                <svg className="w-6 h-6 text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -296,25 +274,13 @@ export default function AdminPage() {
           <button
             onClick={() => setFilter("confirmed")}
             className={`bg-card rounded-xl p-6 border transition-all text-left ${
-              filter === "confirmed"
-                ? "border-success ring-2 ring-success/20"
-                : "border-border hover:border-success/50"
+              filter === "confirmed" ? "border-success ring-2 ring-success/20" : "border-border hover:border-success/50"
             }`}
           >
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-full bg-success/10 flex items-center justify-center">
-                <svg
-                  className="w-6 h-6 text-success"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M5 13l4 4L19 7"
-                  />
+                <svg className="w-6 h-6 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
               <div>
@@ -334,18 +300,8 @@ export default function AdminPage() {
           >
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center">
-                <svg
-                  className="w-6 h-6 text-destructive"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
+                <svg className="w-6 h-6 text-destructive" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </div>
               <div>
@@ -358,19 +314,12 @@ export default function AdminPage() {
           <button
             onClick={() => setFilter("pending")}
             className={`bg-card rounded-xl p-6 border transition-all text-left ${
-              filter === "pending"
-                ? "border-primary ring-2 ring-primary/20"
-                : "border-border hover:border-primary/50"
+              filter === "pending" ? "border-primary ring-2 ring-primary/20" : "border-border hover:border-primary/50"
             }`}
           >
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
-                <svg
-                  className="w-6 h-6 text-muted-foreground"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
+                <svg className="w-6 h-6 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -385,14 +334,38 @@ export default function AdminPage() {
               </div>
             </div>
           </button>
+
+          <button
+            onClick={() => setFilter("attended")}
+            className={`bg-card rounded-xl p-6 border transition-all text-left ${
+              filter === "attended"
+                ? "border-blue-600 ring-2 ring-blue-600/20"
+                : "border-border hover:border-blue-600/50"
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-full bg-blue-500/10 flex items-center justify-center">
+                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-foreground">{stats.attended}</p>
+                <p className="text-sm text-muted-foreground">Compareceram</p>
+              </div>
+            </div>
+          </button>
         </div>
 
         <div className="bg-card rounded-xl shadow-lg border border-border overflow-hidden">
           <div className="p-6 border-b border-border">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-foreground">
-                Lista de Convidados e Confirmações
-              </h2>
+              <h2 className="text-xl font-semibold text-foreground">Lista de Convidados e Confirmações</h2>
               {filter !== "all" && (
                 <button
                   onClick={() => setFilter("all")}
@@ -423,6 +396,9 @@ export default function AdminPage() {
                     Status
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    Compareceram
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Data
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
@@ -432,18 +408,12 @@ export default function AdminPage() {
               </thead>
               <tbody className="divide-y divide-border">
                 {filteredGuests.map((guest) => {
-                  const confirmation = confirmations.find(
-                    (c) => c.guestId === guest.id
-                  );
+                  const confirmation = confirmations.find((c) => c.guestId === guest.id)
                   return (
                     <tr key={guest.id} className="hover:bg-muted/50 transition-colors">
                       <td className="px-6 py-4">
                         <p className="font-medium text-foreground">{guest.name}</p>
-                        {guest.companion && (
-                          <p className="text-sm text-muted-foreground">
-                            e {guest.companion}
-                          </p>
-                        )}
+                        {guest.companion && <p className="text-sm text-muted-foreground">e {guest.companion}</p>}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         {confirmation ? (
@@ -456,11 +426,7 @@ export default function AdminPage() {
                           >
                             {confirmation.confirmed ? (
                               <>
-                                <svg
-                                  className="w-3 h-3"
-                                  fill="currentColor"
-                                  viewBox="0 0 20 20"
-                                >
+                                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                                   <path
                                     fillRule="evenodd"
                                     d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
@@ -471,14 +437,10 @@ export default function AdminPage() {
                               </>
                             ) : (
                               <>
-                                <svg
-                                  className="w-3 h-3"
-                                  fill="currentColor"
-                                  viewBox="0 0 20 20"
-                                >
+                                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                                   <path
                                     fillRule="evenodd"
-                                    d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414z"
+                                    d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.415-1.415L11 9.586V6z"
                                     clipRule="evenodd"
                                   />
                                 </svg>
@@ -488,11 +450,7 @@ export default function AdminPage() {
                           </span>
                         ) : (
                           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-muted text-muted-foreground">
-                            <svg
-                              className="w-3 h-3"
-                              fill="currentColor"
-                              viewBox="0 0 20 20"
-                            >
+                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                               <path
                                 fillRule="evenodd"
                                 d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
@@ -504,18 +462,40 @@ export default function AdminPage() {
                         )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
+                        {confirmation?.attended ? (
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-blue-500/10 text-blue-600">
+                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                              <path
+                                fillRule="evenodd"
+                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                            Sim
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-muted text-muted-foreground">
+                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                              <path
+                                fillRule="evenodd"
+                                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L6.586 10l-4.293-4.293a1 1 0 010-1.414z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                            Não
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
                         <p className="text-sm text-muted-foreground">
                           {confirmation
-                            ? new Date(confirmation.timestamp).toLocaleString(
-                                "pt-BR",
-                                {
-                                  day: "2-digit",
-                                  month: "2-digit",
-                                  year: "numeric",
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                }
-                              )
+                            ? new Date(confirmation.timestamp).toLocaleString("pt-BR", {
+                                day: "2-digit",
+                                month: "2-digit",
+                                year: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })
                             : "-"}
                         </p>
                       </td>
@@ -527,12 +507,7 @@ export default function AdminPage() {
                             size="sm"
                             className="text-xs"
                           >
-                            <svg
-                              className="w-3 h-3 mr-1"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
+                            <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
@@ -548,12 +523,7 @@ export default function AdminPage() {
                             size="sm"
                             className="text-xs text-destructive hover:bg-destructive/10"
                           >
-                            <svg
-                              className="w-3 h-3 mr-1"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
+                            <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
@@ -566,7 +536,7 @@ export default function AdminPage() {
                         </div>
                       </td>
                     </tr>
-                  );
+                  )
                 })}
               </tbody>
             </table>
@@ -574,5 +544,5 @@ export default function AdminPage() {
         </div>
       </div>
     </div>
-  );
+  )
 }
