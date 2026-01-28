@@ -9,6 +9,9 @@ import Image from "next/image";
 import QRCode from "qrcode";
 import { formatCPF, validateCPF } from "@/lib/cpf";
 
+const CONGRESSO = "uti";
+const CONGRESSO_NOME = "III Congresso de UTI";
+
 interface Workshop {
   id: string;
   titulo: string;
@@ -44,7 +47,7 @@ interface Escolha {
   };
 }
 
-export default function EscolhaWorkshopPage() {
+export default function ConfirmacaoUTIPage() {
   const [step, setStep] = useState<"cpf" | "escolha" | "confirmacao">("cpf");
   const [cpf, setCpf] = useState("");
   const [cpfError, setCpfError] = useState("");
@@ -62,11 +65,6 @@ export default function EscolhaWorkshopPage() {
   
   const qrCodeRef = useRef<HTMLCanvasElement>(null);
 
-  const congressoNome = inscrito?.congresso === "uti" 
-    ? "III Congresso de UTI" 
-    : "III Congresso de UTI Pediátrica e Neonatal";
-
-  // Validar CPF ao digitar
   const handleCpfChange = (value: string) => {
     const formatted = formatCPF(value);
     setCpf(formatted);
@@ -82,7 +80,6 @@ export default function EscolhaWorkshopPage() {
     }
   };
 
-  // Gerar QR Code
   useEffect(() => {
     if (step === "confirmacao" && inscrito && qrCodeRef.current) {
       QRCode.toCanvas(
@@ -100,7 +97,6 @@ export default function EscolhaWorkshopPage() {
     }
   }, [step, inscrito]);
 
-  // Buscar dados do inscrito
   const handleBuscarInscrito = async () => {
     const cpfLimpo = cpf.replace(/\D/g, "");
     
@@ -119,7 +115,7 @@ export default function EscolhaWorkshopPage() {
     setCpfError("");
 
     try {
-      const response = await fetch(`/api/workshops?cpf=${cpfLimpo}`);
+      const response = await fetch(`/api/workshops?cpf=${cpfLimpo}&congresso=${CONGRESSO}`);
       const data = await response.json();
 
       if (!response.ok) {
@@ -145,7 +141,6 @@ export default function EscolhaWorkshopPage() {
     }
   };
 
-  // Confirmar escolhas
   const handleConfirmarEscolhas = async () => {
     if (!inscrito) return;
 
@@ -194,15 +189,14 @@ export default function EscolhaWorkshopPage() {
             />
           </div>
 
-          {/* Step: CPF */}
           {step === "cpf" && (
             <div className="space-y-6">
               <div className="text-center">
                 <h1 className="text-2xl font-bold text-[#7D1128] mb-2">
-                  Escolha de Workshop
+                  {CONGRESSO_NOME}
                 </h1>
                 <p className="text-muted-foreground">
-                  Digite seu CPF para acessar suas opções
+                  Digite seu CPF para acessar suas opções de workshop
                 </p>
               </div>
 
@@ -238,7 +232,6 @@ export default function EscolhaWorkshopPage() {
             </div>
           )}
 
-          {/* Step: Escolha */}
           {step === "escolha" && inscrito && (
             <div className="space-y-6">
               <div className="text-center">
@@ -246,11 +239,10 @@ export default function EscolhaWorkshopPage() {
                   Olá, {inscrito.nome_completo.split(" ")[0]}!
                 </h1>
                 <p className="text-sm text-muted-foreground">
-                  {congressoNome}
+                  {CONGRESSO_NOME}
                 </p>
               </div>
 
-              {/* Workshops */}
               <div className="space-y-3">
                 <Label className="text-base font-semibold">
                   Escolha seu Workshop:
@@ -297,7 +289,6 @@ export default function EscolhaWorkshopPage() {
                 })}
               </div>
 
-              {/* Temas Livres */}
               {temasLivres && (
                 <div className="space-y-3 pt-4 border-t">
                   <Label className="text-base font-semibold">
@@ -359,7 +350,6 @@ export default function EscolhaWorkshopPage() {
             </div>
           )}
 
-          {/* Step: Confirmação */}
           {step === "confirmacao" && inscrito && escolhaConfirmada && (
             <div className="space-y-6 text-center">
               <div>
@@ -375,7 +365,7 @@ export default function EscolhaWorkshopPage() {
                   {inscrito.nome_completo}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {congressoNome}
+                  {CONGRESSO_NOME}
                 </p>
               </div>
 
