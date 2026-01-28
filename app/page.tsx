@@ -1,32 +1,63 @@
 "use client";
 
+import React from "react"
+
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import type { Guest, Confirmation } from "@/lib/guests";
 
-type FilterType = "all" | "confirmed" | "declined" | "pending";
+type Congresso = "uti" | "utipedneo";
+
+interface Inscricao {
+  id: string;
+  nome_completo: string;
+  cpf: string;
+  email: string;
+  telefone: string;
+  tipo_aluno: string;
+  cidade_sao_camilo: string | null;
+  area: string;
+  area_outro: string | null;
+  modalidade: string;
+  hospital_parceiro: string | null;
+  created_at: string;
+}
 
 interface Stats {
-  confirmed: number;
-  declined: number;
-  pending: number;
+  total: number;
+  estudantes: number;
+  profissionais: number;
+  parceiros: number;
+  alunosNAD: number;
+  alunosSaoCamilo: number;
 }
+
+const congressoNames: Record<Congresso, string> = {
+  uti: "III Congresso de UTI",
+  utipedneo: "III Congresso de UTI Pediátrica e Neonatal",
+};
+
+const congressoShortNames: Record<Congresso, string> = {
+  uti: "UTI",
+  utipedneo: "UTI Ped/Neo",
+};
 
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [selectedCongresso, setSelectedCongresso] = useState<Congresso | null>(null);
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [guests, setGuests] = useState<Guest[]>([]);
-  const [confirmations, setConfirmations] = useState<Confirmation[]>([]);
-  const [stats, setStats] = useState<Stats>({ confirmed: 0, declined: 0, pending: 0 });
+  const [inscricoes, setInscricoes] = useState<Inscricao[]>([]);
+  const [stats, setStats] = useState<Stats>({
+    total: 0,
+    estudantes: 0,
+    profissionais: 0,
+    parceiros: 0,
+    alunosNAD: 0,
+    alunosSaoCamilo: 0,
+  });
   const [isLoading, setIsLoading] = useState(false);
-  
-  const [newGuestName, setNewGuestName] = useState("");
-  const [newGuestCompanion, setNewGuestCompanion] = useState("");
-  const [isAddingGuest, setIsAddingGuest] = useState(false);
-
-  const [filter, setFilter] = useState<FilterType>("all");
+  const [filter, setFilter] = useState<string>("all");
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,7 +73,6 @@ export default function AdminPage() {
 
       if (response.ok) {
         setIsAuthenticated(true);
-        loadData();
       } else {
         setError("Senha incorreta");
       }
@@ -53,71 +83,90 @@ export default function AdminPage() {
     }
   };
 
-  const loadData = async () => {
+  const loadData = async (congresso: Congresso) => {
     try {
-      const response = await fetch("/api/admin/data");
+      const response = await fetch(`/api/inscricoes?congresso=${congresso}`);
       const data = await response.json();
-      setGuests(data.guests);
-      setConfirmations(data.confirmations);
-      setStats(data.stats);
+      setInscricoes(data.inscricoes || []);
+      setStats(data.stats || {
+        total: 0,
+        estudantes: 0,
+        profissionais: 0,
+        parceiros: 0,
+        alunosNAD: 0,
+        alunosSaoCamilo: 0,
+      });
     } catch (error) {
       console.error("Error loading data:", error);
     }
   };
 
-  const handleAddGuest = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newGuestName.trim()) return;
-
-    setIsAddingGuest(true);
-    try {
-      const response = await fetch("/api/guests", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: newGuestName.trim(),
-          companion: newGuestCompanion.trim() || null,
-        }),
-      });
-
-      if (response.ok) {
-        setNewGuestName("");
-        setNewGuestCompanion("");
-        loadData();
-      }
-    } catch (error) {
-      console.error("Error adding guest:", error);
-      alert("Erro ao adicionar convidado");
-    } finally {
-      setIsAddingGuest(false);
-    }
+  const handleSelectCongresso = (congresso: Congresso) => {
+    setSelectedCongresso(congresso);
+    setFilter("all");
+    loadData(congresso);
   };
 
-  const handleRemoveGuest = async (guestId: string) => {
-    if (!confirm("Tem certeza que deseja remover este convidado?")) return;
+  const handleSwitchCongresso = () => {
+    const newCongresso = selectedCongresso === "uti" ? "utipedneo" : "uti";
+    handleSelectCongresso(newCongresso);
+  };
+
+  const handleRemoveInscricao = async (id: string) => {
+    if (!confirm("Tem certeza que deseja remover esta inscrição?")) return;
 
     try {
-      const response = await fetch(`/api/guests?id=${guestId}`, {
+      const response = await fetch(`/api/inscricoes?id=${id}`, {
         method: "DELETE",
       });
 
-      if (response.ok) {
-        await loadData(); // Recarregar dados imediatamente após exclusão bem-sucedida
+      if (response.ok && selectedCongresso) {
+        await loadData(selectedCongresso);
       } else {
-        alert("Erro ao remover convidado");
+        alert("Erro ao remover inscrição");
       }
     } catch (error) {
-      console.error("Error removing guest:", error);
-      alert("Erro ao remover convidado");
+      console.error("Error removing inscription:", error);
+      alert("Erro ao remover inscrição");
     }
   };
 
-  const copyInviteLink = (guestId: string) => {
-    const link = `${window.location.origin}/convite/${guestId}`;
-    navigator.clipboard.writeText(link);
-    alert("Link copiado para a área de transferência!");
+  const formatCPF = (cpf: string) => {
+    return cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
   };
 
+  const formatPhone = (phone: string) => {
+    return phone.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3");
+  };
+
+  const getAreaLabel = (area: string, areaOutro: string | null) => {
+    const areas: Record<string, string> = {
+      enfermagem: "Enfermagem",
+      fisioterapia: "Fisioterapia",
+      medicina: "Medicina",
+      nutricao: "Nutrição",
+      outro: areaOutro || "Outro",
+    };
+    return areas[area] || area;
+  };
+
+  const getModalidadeLabel = (modalidade: string) => {
+    const modalidades: Record<string, string> = {
+      estudante: "Estudante",
+      profissional: "Profissional",
+      parceiro: "Parceiro",
+    };
+    return modalidades[modalidade] || modalidade;
+  };
+
+  const getTipoAlunoLabel = (tipo: string, cidade: string | null) => {
+    if (tipo === "nao") return "Não";
+    if (tipo === "nad") return "NAD";
+    if (tipo === "sao_camilo") return `São Camilo${cidade ? ` - ${cidade}` : ""}`;
+    return tipo;
+  };
+
+  // Tela de Login
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-secondary/10 via-background to-muted flex items-center justify-center p-4">
@@ -179,220 +228,215 @@ export default function AdminPage() {
     );
   }
 
-  const filteredGuests = guests.filter((guest) => {
+  // Tela de Seleção de Congresso
+  if (!selectedCongresso) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-secondary/10 via-background to-muted flex items-center justify-center p-4">
+        <div className="w-full max-w-2xl">
+          <div className="flex justify-center mb-8">
+            <Image
+              src="/logo.webp"
+              alt="Núcleo de Carreira em Saúde"
+              width={300}
+              height={90}
+              className="w-full max-w-xs"
+            />
+          </div>
+
+          <div className="bg-card rounded-2xl shadow-xl p-8 border border-border">
+            <h1 className="text-2xl font-bold text-foreground mb-2 text-center">
+              Selecione o Congresso
+            </h1>
+            <p className="text-muted-foreground text-center mb-8 text-sm">
+              Escolha qual congresso você deseja gerenciar
+            </p>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <button
+                onClick={() => handleSelectCongresso("uti")}
+                className="p-6 rounded-xl border-2 border-border hover:border-primary hover:bg-primary/5 transition-all text-left group"
+              >
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
+                  <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                  </svg>
+                </div>
+                <h2 className="text-lg font-semibold text-foreground mb-1">
+                  III Congresso de UTI
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  Gerenciar inscrições do Congresso de UTI
+                </p>
+              </button>
+
+              <button
+                onClick={() => handleSelectCongresso("utipedneo")}
+                className="p-6 rounded-xl border-2 border-border hover:border-primary hover:bg-primary/5 transition-all text-left group"
+              >
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
+                  <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                  </svg>
+                </div>
+                <h2 className="text-lg font-semibold text-foreground mb-1">
+                  III Congresso de UTI Pediátrica e Neonatal
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  Gerenciar inscrições do Congresso de UTI Pediátrica e Neonatal
+                </p>
+              </button>
+            </div>
+
+            <div className="mt-6 pt-6 border-t border-border">
+              <Button
+                onClick={() => setIsAuthenticated(false)}
+                variant="outline"
+                className="w-full"
+              >
+                Sair
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Filtrar inscrições
+  const filteredInscricoes = inscricoes.filter((inscricao) => {
     if (filter === "all") return true;
-    
-    const confirmation = confirmations.find((c) => c.guestId === guest.id);
-    
-    if (filter === "confirmed") {
-      return confirmation && confirmation.confirmed === true;
-    }
-    if (filter === "declined") {
-      return confirmation && confirmation.confirmed === false;
-    }
-    if (filter === "pending") {
-      return !confirmation;
-    }
-    
+    if (filter === "estudante") return inscricao.modalidade === "estudante";
+    if (filter === "profissional") return inscricao.modalidade === "profissional";
+    if (filter === "parceiro") return inscricao.modalidade === "parceiro";
     return true;
   });
 
+  // Dashboard do Congresso
   return (
     <div className="min-h-screen bg-gradient-to-br from-secondary/10 via-background to-muted">
-      <div className="container mx-auto px-4 py-12 max-w-6xl">
-        <div className="flex items-center justify-between mb-8">
+      <div className="container mx-auto px-4 py-12 max-w-7xl">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-foreground mb-2">
-              Painel Administrativo
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
+              {congressoNames[selectedCongresso]}
             </h1>
             <p className="text-muted-foreground">
-              Gerenciamento de confirmações do evento
+              Gerenciamento de inscrições
             </p>
           </div>
-          <Button
-            onClick={() => setIsAuthenticated(false)}
-            variant="outline"
-            className="flex items-center gap-2"
-          >
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-              />
-            </svg>
-            Sair
-          </Button>
-        </div>
-
-        <div className="bg-card rounded-xl shadow-lg border border-border p-6 mb-8">
-          <h2 className="text-xl font-semibold text-foreground mb-4">
-            Adicionar Novo Convidado
-          </h2>
-          <form onSubmit={handleAddGuest} className="flex gap-3 flex-wrap">
-            <input
-              type="text"
-              value={newGuestName}
-              onChange={(e) => setNewGuestName(e.target.value)}
-              placeholder="Nome do convidado *"
-              className="flex-1 min-w-[200px] px-4 py-2 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-              required
-            />
-            <input
-              type="text"
-              value={newGuestCompanion}
-              onChange={(e) => setNewGuestCompanion(e.target.value)}
-              placeholder="Nome do acompanhante (opcional)"
-              className="flex-1 min-w-[200px] px-4 py-2 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-            />
+          <div className="flex items-center gap-3">
             <Button
-              type="submit"
-              disabled={isAddingGuest}
-              className="bg-primary hover:bg-primary/90 text-primary-foreground"
+              onClick={handleSwitchCongresso}
+              variant="outline"
+              className="flex items-center gap-2 bg-transparent"
             >
-              {isAddingGuest ? "Adicionando..." : "Adicionar"}
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+              </svg>
+              Ir para {congressoShortNames[selectedCongresso === "uti" ? "utipedneo" : "uti"]}
             </Button>
-          </form>
+            <Button
+              onClick={() => setSelectedCongresso(null)}
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+              Menu
+            </Button>
+            <Button
+              onClick={() => {
+                setIsAuthenticated(false);
+                setSelectedCongresso(null);
+              }}
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+              Sair
+            </Button>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        {/* Stats Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
           <button
             onClick={() => setFilter("all")}
-            className={`bg-card rounded-xl p-6 border transition-all text-left ${
+            className={`bg-card rounded-xl p-4 border transition-all text-left ${
               filter === "all"
                 ? "border-primary ring-2 ring-primary/20"
                 : "border-border hover:border-primary/50"
             }`}
           >
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
-                <svg
-                  className="w-6 h-6 text-foreground"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                  />
-                </svg>
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-foreground">{guests.length}</p>
-                <p className="text-sm text-muted-foreground">Total Convidados</p>
-              </div>
-            </div>
+            <p className="text-2xl font-bold text-foreground">{stats.total}</p>
+            <p className="text-xs text-muted-foreground">Total Inscritos</p>
           </button>
 
           <button
-            onClick={() => setFilter("confirmed")}
-            className={`bg-card rounded-xl p-6 border transition-all text-left ${
-              filter === "confirmed"
-                ? "border-success ring-2 ring-success/20"
-                : "border-border hover:border-success/50"
-            }`}
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-success/10 flex items-center justify-center">
-                <svg
-                  className="w-6 h-6 text-success"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M5 13l4 4L19 7"
-                  />
-                </svg>
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-foreground">{stats.confirmed}</p>
-                <p className="text-sm text-muted-foreground">Confirmados</p>
-              </div>
-            </div>
-          </button>
-
-          <button
-            onClick={() => setFilter("declined")}
-            className={`bg-card rounded-xl p-6 border transition-all text-left ${
-              filter === "declined"
-                ? "border-destructive ring-2 ring-destructive/20"
-                : "border-border hover:border-destructive/50"
-            }`}
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center">
-                <svg
-                  className="w-6 h-6 text-destructive"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-foreground">{stats.declined}</p>
-                <p className="text-sm text-muted-foreground">Não Comparecerão</p>
-              </div>
-            </div>
-          </button>
-
-          <button
-            onClick={() => setFilter("pending")}
-            className={`bg-card rounded-xl p-6 border transition-all text-left ${
-              filter === "pending"
+            onClick={() => setFilter("estudante")}
+            className={`bg-card rounded-xl p-4 border transition-all text-left ${
+              filter === "estudante"
                 ? "border-primary ring-2 ring-primary/20"
                 : "border-border hover:border-primary/50"
             }`}
           >
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
-                <svg
-                  className="w-6 h-6 text-muted-foreground"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-foreground">{stats.pending}</p>
-                <p className="text-sm text-muted-foreground">Pendentes</p>
-              </div>
-            </div>
+            <p className="text-2xl font-bold text-foreground">{stats.estudantes}</p>
+            <p className="text-xs text-muted-foreground">Estudantes</p>
           </button>
+
+          <button
+            onClick={() => setFilter("profissional")}
+            className={`bg-card rounded-xl p-4 border transition-all text-left ${
+              filter === "profissional"
+                ? "border-primary ring-2 ring-primary/20"
+                : "border-border hover:border-primary/50"
+            }`}
+          >
+            <p className="text-2xl font-bold text-foreground">{stats.profissionais}</p>
+            <p className="text-xs text-muted-foreground">Profissionais</p>
+          </button>
+
+          <button
+            onClick={() => setFilter("parceiro")}
+            className={`bg-card rounded-xl p-4 border transition-all text-left ${
+              filter === "parceiro"
+                ? "border-primary ring-2 ring-primary/20"
+                : "border-border hover:border-primary/50"
+            }`}
+          >
+            <p className="text-2xl font-bold text-foreground">{stats.parceiros}</p>
+            <p className="text-xs text-muted-foreground">Parceiros</p>
+          </button>
+
+          <div className="bg-card rounded-xl p-4 border border-border">
+            <p className="text-2xl font-bold text-foreground">{stats.alunosNAD}</p>
+            <p className="text-xs text-muted-foreground">Alunos NAD</p>
+          </div>
+
+          <div className="bg-card rounded-xl p-4 border border-border">
+            <p className="text-2xl font-bold text-foreground">{stats.alunosSaoCamilo}</p>
+            <p className="text-xs text-muted-foreground">Alunos São Camilo</p>
+          </div>
         </div>
 
+        {/* Inscriptions Table */}
         <div className="bg-card rounded-xl shadow-lg border border-border overflow-hidden">
           <div className="p-6 border-b border-border">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-foreground">
-                Lista de Convidados e Confirmações
-              </h2>
+            <div className="flex items-center justify-between flex-wrap gap-4">
+              <div>
+                <h2 className="text-xl font-semibold text-foreground">
+                  Lista de Inscritos
+                </h2>
+                {filter !== "all" && (
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Exibindo {filteredInscricoes.length} de {inscricoes.length} inscritos
+                  </p>
+                )}
+              </div>
               {filter !== "all" && (
                 <button
                   onClick={() => setFilter("all")}
@@ -405,169 +449,109 @@ export default function AdminPage() {
                 </button>
               )}
             </div>
-            {filter !== "all" && (
-              <p className="text-sm text-muted-foreground mt-2">
-                Exibindo {filteredGuests.length} de {guests.length} convidados
-              </p>
-            )}
           </div>
 
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-muted">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Convidado
+                  <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    Nome
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Status
+                  <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    CPF
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    Contato
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    Aluno NAD/SC
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    Área
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    Modalidade
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Data
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Ações
                   </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {filteredGuests.map((guest) => {
-                  const confirmation = confirmations.find(
-                    (c) => c.guestId === guest.id
-                  );
-                  return (
-                    <tr key={guest.id} className="hover:bg-muted/50 transition-colors">
-                      <td className="px-6 py-4">
-                        <p className="font-medium text-foreground">{guest.name}</p>
-                        {guest.companion && (
-                          <p className="text-sm text-muted-foreground">
-                            e {guest.companion}
+                {filteredInscricoes.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} className="px-4 py-12 text-center text-muted-foreground">
+                      Nenhuma inscrição encontrada
+                    </td>
+                  </tr>
+                ) : (
+                  filteredInscricoes.map((inscricao) => (
+                    <tr key={inscricao.id} className="hover:bg-muted/50 transition-colors">
+                      <td className="px-4 py-4">
+                        <p className="font-medium text-foreground text-sm">{inscricao.nome_completo}</p>
+                      </td>
+                      <td className="px-4 py-4">
+                        <p className="text-sm text-muted-foreground">{formatCPF(inscricao.cpf)}</p>
+                      </td>
+                      <td className="px-4 py-4">
+                        <p className="text-sm text-foreground">{inscricao.email}</p>
+                        <p className="text-xs text-muted-foreground">{formatPhone(inscricao.telefone)}</p>
+                      </td>
+                      <td className="px-4 py-4">
+                        <p className="text-sm text-muted-foreground">
+                          {getTipoAlunoLabel(inscricao.tipo_aluno, inscricao.cidade_sao_camilo)}
+                        </p>
+                      </td>
+                      <td className="px-4 py-4">
+                        <p className="text-sm text-muted-foreground">
+                          {getAreaLabel(inscricao.area, inscricao.area_outro)}
+                        </p>
+                      </td>
+                      <td className="px-4 py-4">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          inscricao.modalidade === "estudante"
+                            ? "bg-blue-100 text-blue-800"
+                            : inscricao.modalidade === "profissional"
+                            ? "bg-green-100 text-green-800"
+                            : "bg-purple-100 text-purple-800"
+                        }`}>
+                          {getModalidadeLabel(inscricao.modalidade)}
+                        </span>
+                        {inscricao.hospital_parceiro && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {inscricao.hospital_parceiro}
                           </p>
                         )}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {confirmation ? (
-                          <span
-                            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${
-                              confirmation.confirmed
-                                ? "bg-success/10 text-success"
-                                : "bg-destructive/10 text-destructive"
-                            }`}
-                          >
-                            {confirmation.confirmed ? (
-                              <>
-                                <svg
-                                  className="w-3 h-3"
-                                  fill="currentColor"
-                                  viewBox="0 0 20 20"
-                                >
-                                  <path
-                                    fillRule="evenodd"
-                                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                    clipRule="evenodd"
-                                  />
-                                </svg>
-                                Confirmado
-                              </>
-                            ) : (
-                              <>
-                                <svg
-                                  className="w-3 h-3"
-                                  fill="currentColor"
-                                  viewBox="0 0 20 20"
-                                >
-                                  <path
-                                    fillRule="evenodd"
-                                    d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414z"
-                                    clipRule="evenodd"
-                                  />
-                                </svg>
-                                Não vai
-                              </>
-                            )}
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-muted text-muted-foreground">
-                            <svg
-                              className="w-3 h-3"
-                              fill="currentColor"
-                              viewBox="0 0 20 20"
-                            >
-                              <path
-                                fillRule="evenodd"
-                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
-                                clipRule="evenodd"
-                              />
-                            </svg>
-                            Pendente
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-4 py-4">
                         <p className="text-sm text-muted-foreground">
-                          {confirmation
-                            ? new Date(confirmation.timestamp).toLocaleString(
-                                "pt-BR",
-                                {
-                                  day: "2-digit",
-                                  month: "2-digit",
-                                  year: "numeric",
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                }
-                              )
-                            : "-"}
+                          {new Date(inscricao.created_at).toLocaleDateString("pt-BR")}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(inscricao.created_at).toLocaleTimeString("pt-BR", {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
                         </p>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center gap-2">
-                          <Button
-                            onClick={() => copyInviteLink(guest.id)}
-                            variant="outline"
-                            size="sm"
-                            className="text-xs"
-                          >
-                            <svg
-                              className="w-3 h-3 mr-1"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                              />
-                            </svg>
-                            Copiar Link
-                          </Button>
-                          <Button
-                            onClick={() => handleRemoveGuest(guest.id)}
-                            variant="outline"
-                            size="sm"
-                            className="text-xs text-destructive hover:bg-destructive/10"
-                          >
-                            <svg
-                              className="w-3 h-3 mr-1"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                              />
-                            </svg>
-                            Remover
-                          </Button>
-                        </div>
+                      <td className="px-4 py-4">
+                        <button
+                          onClick={() => handleRemoveInscricao(inscricao.id)}
+                          className="text-destructive hover:text-destructive/80 transition-colors"
+                          title="Remover inscrição"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
                       </td>
                     </tr>
-                  );
-                })}
+                  ))
+                )}
               </tbody>
             </table>
           </div>
