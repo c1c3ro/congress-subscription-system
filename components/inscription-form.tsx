@@ -4,6 +4,7 @@ import React from "react"
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { formatCPF, validateCPF } from "@/lib/cpf";
 
 interface InscriptionFormProps {
   congresso: "uti" | "utipedneo";
@@ -14,6 +15,7 @@ export function InscriptionForm({ congresso, congressoNome }: InscriptionFormPro
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState("");
+  const [cpfError, setCpfError] = useState("");
 
   const [formData, setFormData] = useState({
     nome_completo: "",
@@ -27,15 +29,6 @@ export function InscriptionForm({ congresso, congressoNome }: InscriptionFormPro
     modalidade: "",
     hospital_parceiro: "",
   });
-
-  const formatCPF = (value: string) => {
-    const numbers = value.replace(/\D/g, "");
-    return numbers
-      .replace(/(\d{3})(\d)/, "$1.$2")
-      .replace(/(\d{3})(\d)/, "$1.$2")
-      .replace(/(\d{3})(\d{1,2})/, "$1-$2")
-      .replace(/(-\d{2})\d+?$/, "$1");
-  };
 
   const formatPhone = (value: string) => {
     const numbers = value.replace(/\D/g, "");
@@ -51,6 +44,16 @@ export function InscriptionForm({ congresso, congressoNome }: InscriptionFormPro
     let formattedValue = value;
     if (name === "cpf") {
       formattedValue = formatCPF(value);
+      // Validar CPF quando completo
+      if (formattedValue.replace(/\D/g, "").length === 11) {
+        if (!validateCPF(formattedValue)) {
+          setCpfError("CPF inválido");
+        } else {
+          setCpfError("");
+        }
+      } else {
+        setCpfError("");
+      }
     } else if (name === "telefone") {
       formattedValue = formatPhone(value);
     }
@@ -61,6 +64,13 @@ export function InscriptionForm({ congresso, congressoNome }: InscriptionFormPro
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    // Validar CPF antes de enviar
+    if (!validateCPF(formData.cpf)) {
+      setCpfError("CPF inválido");
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -139,11 +149,14 @@ export function InscriptionForm({ congresso, congressoNome }: InscriptionFormPro
           name="cpf"
           value={formData.cpf}
           onChange={handleChange}
-          className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+          className={`w-full px-4 py-3 rounded-lg border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary ${cpfError ? "border-destructive" : "border-border"}`}
           placeholder="000.000.000-00"
           maxLength={14}
           required
         />
+        {cpfError && (
+          <p className="text-sm text-destructive mt-1">{cpfError}</p>
+        )}
       </div>
 
       {/* E-mail */}
@@ -328,7 +341,7 @@ export function InscriptionForm({ congresso, congressoNome }: InscriptionFormPro
       {/* Submit */}
       <Button
         type="submit"
-        disabled={isSubmitting}
+        disabled={isSubmitting || !!cpfError}
         className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-6 text-lg"
       >
         {isSubmitting ? "Realizando inscrição..." : "Confirmar Inscrição"}

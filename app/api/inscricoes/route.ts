@@ -120,6 +120,55 @@ export async function GET(request: Request) {
       );
     }
 
+    // Buscar escolhas de workshop e temas livres para cada inscrito
+    const inscricoesComEscolhas = await Promise.all(
+      (inscricoes || []).map(async (inscricao) => {
+        const { data: escolha } = await supabase
+          .from("escolhas_inscrito")
+          .select("*, workshops(*)")
+          .eq("inscrito_id", inscricao.id)
+          .maybeSingle();
+
+        return {
+          ...inscricao,
+          escolha: escolha
+            ? {
+                workshop: escolha.workshops?.titulo || null,
+                participa_temas_livres: escolha.participa_temas_livres,
+              }
+            : null,
+        };
+      })
+    );
+
+    // Buscar estatísticas de workshops
+    const { data: workshops } = await supabase
+      .from("workshops")
+      .select("*")
+      .eq("congresso", congresso);
+
+    const workshopsComVagas = await Promise.all(
+      (workshops || []).map(async (workshop) => {
+        const { count } = await supabase
+          .from("escolhas_inscrito")
+          .select("*", { count: "exact", head: true })
+          .eq("workshop_id", workshop.id);
+        return {
+          ...workshop,
+          vagas_ocupadas: count || 0,
+        };
+      })
+    );
+
+    // Contar participantes de Temas Livres
+    const { data: participantesTemasLivres } = await supabase
+      .from("escolhas_inscrito")
+      .select("inscrito_id, participa_temas_livres, inscricoes!inner(congresso)")
+      .eq("participa_temas_livres", true)
+      .eq("inscricoes.congresso", congresso);
+
+    const totalTemasLivres = participantesTemasLivres?.length || 0;
+
     // Calcular estatísticas
     const stats = {
       total: inscricoes?.length || 0,
@@ -130,7 +179,12 @@ export async function GET(request: Request) {
       alunosSaoCamilo: inscricoes?.filter((i) => i.tipo_aluno === "sao_camilo").length || 0,
     };
 
-    return NextResponse.json({ inscricoes, stats });
+    return NextResponse.json({
+      inscricoes: inscricoesComEscolhas,
+      stats,
+      workshops: workshopsComVagas,
+      temasLivres: { total: totalTemasLivres },
+    });
   } catch (error) {
     console.error("Erro:", error);
     return NextResponse.json(

@@ -21,6 +21,17 @@ interface Inscricao {
   modalidade: string;
   hospital_parceiro: string | null;
   created_at: string;
+  escolha: {
+    workshop: string | null;
+    participa_temas_livres: boolean;
+  } | null;
+}
+
+interface Workshop {
+  id: string;
+  titulo: string;
+  vagas_total: number;
+  vagas_ocupadas: number;
 }
 
 interface Stats {
@@ -48,6 +59,8 @@ export default function AdminPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [inscricoes, setInscricoes] = useState<Inscricao[]>([]);
+  const [workshops, setWorkshops] = useState<Workshop[]>([]);
+  const [temasLivresTotal, setTemasLivresTotal] = useState(0);
   const [stats, setStats] = useState<Stats>({
     total: 0,
     estudantes: 0,
@@ -88,6 +101,8 @@ export default function AdminPage() {
       const response = await fetch(`/api/inscricoes?congresso=${congresso}`);
       const data = await response.json();
       setInscricoes(data.inscricoes || []);
+      setWorkshops(data.workshops || []);
+      setTemasLivresTotal(data.temasLivres?.total || 0);
       setStats(data.stats || {
         total: 0,
         estudantes: 0,
@@ -423,6 +438,35 @@ export default function AdminPage() {
           </div>
         </div>
 
+        {/* Workshops e Temas Livres Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+          <div className="bg-card rounded-xl p-4 border border-border">
+            <h3 className="text-sm font-semibold text-foreground mb-3">Workshops</h3>
+            <div className="space-y-2">
+              {workshops.map((workshop) => (
+                <div key={workshop.id} className="flex justify-between items-center text-sm">
+                  <span className="text-muted-foreground truncate mr-2">{workshop.titulo}</span>
+                  <span className="font-medium text-foreground whitespace-nowrap">
+                    {workshop.vagas_ocupadas}/{workshop.vagas_total}
+                  </span>
+                </div>
+              ))}
+              {workshops.length === 0 && (
+                <p className="text-sm text-muted-foreground">Nenhum workshop cadastrado</p>
+              )}
+            </div>
+          </div>
+          <div className="bg-card rounded-xl p-4 border border-border">
+            <h3 className="text-sm font-semibold text-foreground mb-3">Temas Livres</h3>
+            <div className="flex items-center gap-4">
+              <div className="flex-1">
+                <p className="text-2xl font-bold text-foreground">{temasLivresTotal}</p>
+                <p className="text-xs text-muted-foreground">Participantes</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Inscriptions Table */}
         <div className="bg-card rounded-xl shadow-lg border border-border overflow-hidden">
           <div className="p-6 border-b border-border">
@@ -474,6 +518,12 @@ export default function AdminPage() {
                     Modalidade
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    Workshop
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    Temas Livres
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Data
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
@@ -484,7 +534,7 @@ export default function AdminPage() {
               <tbody className="divide-y divide-border">
                 {filteredInscricoes.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="px-4 py-12 text-center text-muted-foreground">
+                    <td colSpan={10} className="px-4 py-12 text-center text-muted-foreground">
                       Nenhuma inscrição encontrada
                     </td>
                   </tr>
@@ -525,6 +575,24 @@ export default function AdminPage() {
                           <p className="text-xs text-muted-foreground mt-1">
                             {inscricao.hospital_parceiro}
                           </p>
+                        )}
+                      </td>
+                      <td className="px-4 py-4">
+                        {inscricao.escolha?.workshop ? (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            {inscricao.escolha.workshop}
+                          </span>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">-</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-4">
+                        {inscricao.escolha?.participa_temas_livres ? (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            Sim
+                          </span>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">Não</span>
                         )}
                       </td>
                       <td className="px-4 py-4">
