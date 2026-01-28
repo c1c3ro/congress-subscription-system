@@ -1,4 +1,4 @@
-"use client";
+"use client"
 
 import React from "react"
 
@@ -73,28 +73,28 @@ export default function AdminPage() {
   const [filter, setFilter] = useState<string>("all");
 
   const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    setIsLoading(true);
+    e.preventDefault()
+    setError("")
+    setIsLoading(true)
 
     try {
       const response = await fetch("/api/admin/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ password }),
-      });
+      })
 
       if (response.ok) {
         setIsAuthenticated(true);
       } else {
-        setError("Senha incorreta");
+        setError("Senha incorreta")
       }
     } catch (error) {
-      setError("Erro ao autenticar");
+      setError("Erro ao autenticar")
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   const loadData = async (congresso: Congresso) => {
     try {
@@ -112,9 +112,9 @@ export default function AdminPage() {
         alunosSaoCamilo: 0,
       });
     } catch (error) {
-      console.error("Error loading data:", error);
+      console.error("Error loading data:", error)
     }
-  };
+  }
 
   const handleSelectCongresso = (congresso: Congresso) => {
     setSelectedCongresso(congresso);
@@ -133,7 +133,7 @@ export default function AdminPage() {
     try {
       const response = await fetch(`/api/inscricoes?id=${id}`, {
         method: "DELETE",
-      });
+      })
 
       if (response.ok && selectedCongresso) {
         await loadData(selectedCongresso);
@@ -144,7 +144,7 @@ export default function AdminPage() {
       console.error("Error removing inscription:", error);
       alert("Erro ao remover inscrição");
     }
-  };
+  }
 
   const formatCPF = (cpf: string) => {
     return cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
@@ -197,19 +197,12 @@ export default function AdminPage() {
           </div>
 
           <div className="bg-card rounded-2xl shadow-xl p-8 border border-border">
-            <h1 className="text-2xl font-bold text-foreground mb-2 text-center">
-              Painel Administrativo
-            </h1>
-            <p className="text-muted-foreground text-center mb-6 text-sm">
-              Digite a senha para acessar
-            </p>
+            <h1 className="text-2xl font-bold text-foreground mb-2 text-center">Painel Administrativo</h1>
+            <p className="text-muted-foreground text-center mb-6 text-sm">Digite a senha para acessar</p>
 
             <form onSubmit={handleLogin} className="space-y-4">
               <div>
-                <label
-                  htmlFor="password"
-                  className="block text-sm font-medium text-foreground mb-2"
-                >
+                <label htmlFor="password" className="block text-sm font-medium text-foreground mb-2">
                   Senha
                 </label>
                 <input
@@ -240,7 +233,7 @@ export default function AdminPage() {
           </div>
         </div>
       </div>
-    );
+    )
   }
 
   // Tela de Seleção de Congresso
@@ -626,5 +619,5 @@ export default function AdminPage() {
         </div>
       </div>
     </div>
-  );
+  )
 }
