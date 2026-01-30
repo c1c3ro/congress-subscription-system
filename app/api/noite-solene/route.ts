@@ -50,8 +50,7 @@ export async function POST(request: Request) {
     // Buscar todos os contadores
     const { data: counters, error: fetchError } = await supabase
       .from("noite_solene_counter")
-      .select("*")
-      .order("created_at", { ascending: true });
+      .select("*");
 
     if (fetchError || !counters || counters.length === 0) {
       console.error("[v0] Erro ao buscar contador:", fetchError);
