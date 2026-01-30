@@ -5,10 +5,10 @@ export async function GET() {
   try {
     const supabase = await createClient();
 
-    const { data, error } = await supabase
+    // Buscar todos os registros de noite_solene_counter
+    const { data: counters, error } = await supabase
       .from("noite_solene_counter")
-      .select("*")
-      .single();
+      .select("*");
 
     if (error) {
       console.error("[v0] Erro ao buscar contador:", error);
@@ -18,7 +18,21 @@ export async function GET() {
       );
     }
 
-    return NextResponse.json(data);
+    if (!counters || counters.length === 0) {
+      return NextResponse.json({
+        total_confirmados: 0,
+        limite_vagas: 150,
+      });
+    }
+
+    // Somar total confirmados de todos os registros
+    const totalConfirmados = counters.reduce((sum, counter) => sum + (counter.total_confirmados || 0), 0);
+    const limiteVagas = counters[0]?.limite_vagas || 150;
+
+    return NextResponse.json({
+      total_confirmados: totalConfirmados,
+      limite_vagas: limiteVagas,
+    });
   } catch (error) {
     console.error("[v0] Erro:", error);
     return NextResponse.json(
@@ -33,23 +47,26 @@ export async function POST(request: Request) {
     const { inscrito_id } = await request.json();
     const supabase = await createClient();
 
-    // Incrementar contador
-    const { data: current } = await supabase
+    // Buscar todos os contadores
+    const { data: counters, error: fetchError } = await supabase
       .from("noite_solene_counter")
       .select("*")
-      .single();
+      .order("created_at", { ascending: true });
 
-    if (!current) {
+    if (fetchError || !counters || counters.length === 0) {
+      console.error("[v0] Erro ao buscar contador:", fetchError);
       return NextResponse.json(
         { error: "Contador não encontrado" },
         { status: 404 }
       );
     }
 
+    // Usar o primeiro registro como principal
+    const current = counters[0];
     const novoTotal = current.total_confirmados + 1;
     const pode_participar = novoTotal <= current.limite_vagas;
 
-    // Atualizar contador
+    // Atualizar apenas o primeiro registro
     const { error: counterError } = await supabase
       .from("noite_solene_counter")
       .update({ total_confirmados: novoTotal })
