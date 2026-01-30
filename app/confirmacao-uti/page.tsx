@@ -64,6 +64,11 @@ export default function ConfirmacaoUTIPage() {
   const [participaTemasLivres, setParticipaTemasLivres] = useState(false);
   
   const [escolhaConfirmada, setEscolhaConfirmada] = useState<Escolha | null>(null);
+  const [noiteSoleneInfo, setNoiteSoleneInfo] = useState<{
+    pode_participar: boolean;
+    total_confirmados: number;
+    limite_vagas: number;
+  } | null>(null);
   
   const qrCodeRef = useRef<HTMLCanvasElement>(null);
 
@@ -169,6 +174,19 @@ export default function ConfirmacaoUTIPage() {
       }
 
       setEscolhaConfirmada(data.escolha);
+
+      // Incrementar contador de Noite Solene
+      try {
+        const soleneResponse = await fetch("/api/noite-solene", {
+          method: "POST",
+        });
+        const soleneData = await soleneResponse.json();
+        setNoiteSoleneInfo(soleneData);
+        console.log("[v0] Noite Solene atualizada:", soleneData);
+      } catch (err) {
+        console.error("[v0] Erro ao atualizar Noite Solene:", err);
+      }
+
       setStep("confirmacao");
     } catch (err) {
       setError("Erro ao conectar com o servidor");
@@ -385,6 +403,22 @@ export default function ConfirmacaoUTIPage() {
                   </p>
                 </div>
               </div>
+
+              {noiteSoleneInfo && noiteSoleneInfo.pode_participar && (
+                <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg p-4 border-2 border-purple-200">
+                  <div className="flex gap-3">
+                    <div className="text-2xl">🎉</div>
+                    <div className="text-left">
+                      <p className="font-semibold text-purple-900 mb-1">
+                        Parabéns!
+                      </p>
+                      <p className="text-sm text-purple-800">
+                        Você é uma das <strong>primeiras 150 inscrições</strong> confirmadas e poderá participar da <strong>Noite Solene</strong> do congresso!
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <div className="space-y-2">
                 <p className="text-sm text-muted-foreground">

@@ -75,6 +75,7 @@ export default function AdminPage() {
   const [editingPaymentStatus, setEditingPaymentStatus] = useState<string | null>(null);
   const [editingInscricaoId, setEditingInscricaoId] = useState<string | null>(null);
   const [editingPaymentValue, setEditingPaymentValue] = useState<string>("");
+  const [noiteSoleneCounter, setNoiteSoleneCounter] = useState({ total_confirmados: 0, limite_vagas: 150 });
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -102,12 +103,19 @@ export default function AdminPage() {
 
   const loadData = async (congresso: Congresso) => {
     try {
-      const response = await fetch(`/api/inscricoes?congresso=${congresso}`);
-      const data = await response.json();
-      setInscricoes(data.inscricoes || []);
-      setWorkshops(data.workshops || []);
-      setTemasLivresTotal(data.temasLivres?.total || 0);
-      setStats(data.stats || {
+      const [inscricaoResponse, soleneResponse] = await Promise.all([
+        fetch(`/api/inscricoes?congresso=${congresso}`),
+        fetch(`/api/noite-solene`),
+      ]);
+
+      const inscricaoData = await inscricaoResponse.json();
+      const soleneData = await soleneResponse.json();
+
+      setInscricoes(inscricaoData.inscricoes || []);
+      setWorkshops(inscricaoData.workshops || []);
+      setTemasLivresTotal(inscricaoData.temasLivres?.total || 0);
+      setNoiteSoleneCounter(soleneData);
+      setStats(inscricaoData.stats || {
         total: 0,
         estudantes: 0,
         profissionais: 0,
@@ -152,22 +160,29 @@ export default function AdminPage() {
 
   const handleSavePaymentStatus = async (id: string) => {
     try {
+      console.log("[v0] Salvando status de pagamento:", { id, status: editingPaymentValue });
+      
       const response = await fetch(`/api/inscricoes/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status_pagamento: editingPaymentValue }),
       });
 
+      const responseData = await response.json();
+      console.log("[v0] Resposta do servidor:", { status: response.status, data: responseData });
+
       if (response.ok && selectedCongresso) {
+        console.log("[v0] Atualização bem-sucedida, recarregando dados");
         await loadData(selectedCongresso);
         setEditingInscricaoId(null);
         setEditingPaymentValue("");
       } else {
-        alert("Erro ao atualizar status de pagamento");
+        console.error("[v0] Erro na resposta:", responseData);
+        alert("Erro ao atualizar status de pagamento: " + (responseData.error || "desconhecido"));
       }
     } catch (error) {
-      console.error("Error updating payment status:", error);
-      alert("Erro ao atualizar status de pagamento");
+      console.error("[v0] Erro na requisição:", error);
+      alert("Erro ao atualizar status de pagamento: " + String(error));
     }
   }
 
@@ -498,6 +513,31 @@ export default function AdminPage() {
                 <p className="text-xs text-muted-foreground">Participantes</p>
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Noite Solene Counter */}
+        <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-6 border-2 border-purple-200 mb-8">
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            <div>
+              <h3 className="text-lg font-semibold text-foreground mb-2">Noite Solene</h3>
+              <p className="text-sm text-muted-foreground">Primeiras 150 inscrições confirmadas</p>
+            </div>
+            <div className="text-center">
+              <p className="text-3xl font-bold text-purple-600">{noiteSoleneCounter.total_confirmados}</p>
+              <p className="text-sm text-muted-foreground">de {noiteSoleneCounter.limite_vagas} vagas</p>
+              {noiteSoleneCounter.total_confirmados >= noiteSoleneCounter.limite_vagas && (
+                <p className="text-xs text-pink-600 font-semibold mt-2">✓ COMPLETO</p>
+              )}
+            </div>
+          </div>
+          <div className="mt-4 bg-white rounded-full h-2 overflow-hidden">
+            <div
+              className="bg-gradient-to-r from-purple-500 to-pink-500 h-full transition-all duration-300"
+              style={{
+                width: `${Math.min(100, (noiteSoleneCounter.total_confirmados / noiteSoleneCounter.limite_vagas) * 100)}%`,
+              }}
+            ></div>
           </div>
         </div>
 
