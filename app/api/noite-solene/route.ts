@@ -30,6 +30,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    const { inscrito_id } = await request.json();
     const supabase = await createClient();
 
     // Incrementar contador
@@ -48,19 +49,30 @@ export async function POST(request: Request) {
     const novoTotal = current.total_confirmados + 1;
     const pode_participar = novoTotal <= current.limite_vagas;
 
-    const { data, error } = await supabase
+    // Atualizar contador
+    const { error: counterError } = await supabase
       .from("noite_solene_counter")
       .update({ total_confirmados: novoTotal })
-      .eq("id", current.id)
-      .select()
-      .single();
+      .eq("id", current.id);
 
-    if (error) {
-      console.error("[v0] Erro ao atualizar contador:", error);
+    if (counterError) {
+      console.error("[v0] Erro ao atualizar contador:", counterError);
       return NextResponse.json(
         { error: "Erro ao atualizar contador" },
         { status: 500 }
       );
+    }
+
+    // Marcar inscrito como participante da Noite Solene se pode participar
+    if (pode_participar && inscrito_id) {
+      const { error: inscricaoError } = await supabase
+        .from("inscricoes")
+        .update({ participa_noite_solene: true })
+        .eq("id", inscrito_id);
+
+      if (inscricaoError) {
+        console.error("[v0] Erro ao atualizar inscrito:", inscricaoError);
+      }
     }
 
     return NextResponse.json({

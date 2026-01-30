@@ -21,6 +21,7 @@ interface Inscricao {
   modalidade: string;
   hospital_parceiro: string | null;
   status_pagamento: string | null;
+  participa_noite_solene: boolean;
   created_at: string;
   escolha: {
     workshop: string | null;
@@ -601,6 +602,9 @@ export default function AdminPage() {
                     Status Pagamento
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    Noite Solene
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Data
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
@@ -611,7 +615,7 @@ export default function AdminPage() {
               <tbody className="divide-y divide-border">
                 {filteredInscricoes.length === 0 ? (
                   <tr>
-                    <td colSpan={10} className="px-4 py-12 text-center text-muted-foreground">
+                    <td colSpan={11} className="px-4 py-12 text-center text-muted-foreground">
                       Nenhuma inscrição encontrada
                     </td>
                   </tr>
@@ -706,6 +710,15 @@ export default function AdminPage() {
                               <p className="text-sm text-muted-foreground italic">Clique para adicionar status</p>
                             )}
                           </div>
+                        )}
+                      </td>
+                      <td className="px-4 py-4">
+                        {inscricao.participa_noite_solene ? (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                            ✓ Sim
+                          </span>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">Não</span>
                         )}
                       </td>
                       <td className="px-4 py-4">

@@ -179,6 +179,8 @@ export default function ConfirmacaoUTIPedNeoPage() {
       try {
         const soleneResponse = await fetch("/api/noite-solene", {
           method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ inscrito_id: inscrito.id }),
         });
         const soleneData = await soleneResponse.json();
         setNoiteSoleneInfo(soleneData);
