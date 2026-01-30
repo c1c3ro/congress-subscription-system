@@ -10,7 +10,9 @@ import QRCode from "qrcode";
 import { formatCPF, validateCPF } from "@/lib/cpf";
 
 const CONGRESSO = "utipedneo";
-const CONGRESSO_NOME = "III Congresso de UTI Pediátrica e Neonatal";
+const CONGRESSO_NOME = "III Congresso de UTI Pediátrica e Neonatal do Cariri";
+const LOGO_URL = "/logo-uti-ped-neo.webp";
+const COLOR_THEME = "pink";
 
 interface Workshop {
   id: string;
@@ -176,30 +178,26 @@ export default function ConfirmacaoUTIPedNeoPage() {
   };
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-[#FDF6F7] to-white flex items-center justify-center p-4">
-      <Card className="w-full max-w-lg">
+    <main className="min-h-screen bg-gradient-to-b from-pink-50 to-white flex items-center justify-center p-4">
+      <Card className="w-full max-w-lg border-2 border-pink-200">
         <CardContent className="pt-8 pb-8">
           <div className="flex justify-center mb-6">
             <Image
-              src="/logo.webp"
-              alt="Núcleo de Carreira em Saúde"
-              width={180}
-              height={60}
-              className="object-contain"
+              src={LOGO_URL || "/placeholder.svg"}
+              alt={CONGRESSO_NOME}
+              width={220}
+              height={120}
+              className="object-contain max-h-28"
             />
           </div>
 
           {step === "cpf" && (
             <div className="space-y-6">
               <div className="text-center">
-                <h1 className="text-2xl font-bold text-[#7D1128] mb-2">
-                  {CONGRESSO_NOME}
-                </h1>
-                <p className="text-muted-foreground">
-                  Digite seu CPF para acessar suas opções de workshop
+                <p className="text-sm text-rose-700 font-semibold mb-2">
+                  Confirmação de Presença
                 </p>
               </div>
-
               <div className="space-y-4">
                 <div>
                   <Label htmlFor="cpf">CPF</Label>

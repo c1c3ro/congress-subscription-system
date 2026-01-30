@@ -20,6 +20,7 @@ interface Inscricao {
   area_outro: string | null;
   modalidade: string;
   hospital_parceiro: string | null;
+  status_pagamento: string | null;
   created_at: string;
   escolha: {
     workshop: string | null;
@@ -71,6 +72,9 @@ export default function AdminPage() {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [filter, setFilter] = useState<string>("all");
+  const [editingPaymentStatus, setEditingPaymentStatus] = useState<string | null>(null);
+  const [editingInscricaoId, setEditingInscricaoId] = useState<string | null>(null);
+  const [editingPaymentValue, setEditingPaymentValue] = useState<string>("");
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -144,6 +148,32 @@ export default function AdminPage() {
       console.error("Error removing inscription:", error);
       alert("Erro ao remover inscrição");
     }
+  }
+
+  const handleSavePaymentStatus = async (id: string) => {
+    try {
+      const response = await fetch(`/api/inscricoes/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status_pagamento: editingPaymentValue }),
+      });
+
+      if (response.ok && selectedCongresso) {
+        await loadData(selectedCongresso);
+        setEditingInscricaoId(null);
+        setEditingPaymentValue("");
+      } else {
+        alert("Erro ao atualizar status de pagamento");
+      }
+    } catch (error) {
+      console.error("Error updating payment status:", error);
+      alert("Erro ao atualizar status de pagamento");
+    }
+  }
+
+  const startEditingPaymentStatus = (inscricao: Inscricao) => {
+    setEditingInscricaoId(inscricao.id);
+    setEditingPaymentValue(inscricao.status_pagamento || "");
   }
 
   const formatCPF = (cpf: string) => {
@@ -259,38 +289,40 @@ export default function AdminPage() {
               Escolha qual congresso você deseja gerenciar
             </p>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <button
                 onClick={() => handleSelectCongresso("uti")}
-                className="p-6 rounded-xl border-2 border-border hover:border-primary hover:bg-primary/5 transition-all text-left group"
+                className="p-6 rounded-xl border-2 border-green-200 hover:border-green-400 hover:bg-green-50 transition-all text-center group"
               >
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
-                  <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                  </svg>
+                <div className="flex justify-center mb-4">
+                  <Image
+                    src="/logo-uti-adulto.webp"
+                    alt="III Congresso de UTI"
+                    width={200}
+                    height={120}
+                    className="w-full max-w-sm h-auto"
+                  />
                 </div>
-                <h2 className="text-lg font-semibold text-foreground mb-1">
-                  III Congresso de UTI
-                </h2>
-                <p className="text-sm text-muted-foreground">
-                  Gerenciar inscrições do Congresso de UTI
+                <p className="text-xs text-muted-foreground">
+                  Clique para gerenciar inscrições
                 </p>
               </button>
 
               <button
                 onClick={() => handleSelectCongresso("utipedneo")}
-                className="p-6 rounded-xl border-2 border-border hover:border-primary hover:bg-primary/5 transition-all text-left group"
+                className="p-6 rounded-xl border-2 border-pink-200 hover:border-pink-400 hover:bg-pink-50 transition-all text-center group"
               >
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
-                  <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                  </svg>
+                <div className="flex justify-center mb-4">
+                  <Image
+                    src="/logo-uti-ped-neo.webp"
+                    alt="III Congresso de UTI Pediátrica e Neonatal"
+                    width={200}
+                    height={120}
+                    className="w-full max-w-sm h-auto"
+                  />
                 </div>
-                <h2 className="text-lg font-semibold text-foreground mb-1">
-                  III Congresso de UTI Pediátrica e Neonatal
-                </h2>
-                <p className="text-sm text-muted-foreground">
-                  Gerenciar inscrições do Congresso de UTI Pediátrica e Neonatal
+                <p className="text-xs text-muted-foreground">
+                  Clique para gerenciar inscrições
                 </p>
               </button>
             </div>
@@ -325,13 +357,22 @@ export default function AdminPage() {
       <div className="container mx-auto px-4 py-12 max-w-7xl">
         {/* Header */}
         <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
-              {congressoNames[selectedCongresso]}
-            </h1>
-            <p className="text-muted-foreground">
-              Gerenciamento de inscrições
-            </p>
+          <div className="flex items-center gap-4">
+            <Image
+              src={selectedCongresso === "uti" ? "/logo-uti-adulto.webp" : "/logo-uti-ped-neo.webp"}
+              alt={congressoNames[selectedCongresso]}
+              width={150}
+              height={100}
+              className="h-24 w-auto"
+            />
+            <div>
+              <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
+                {congressoNames[selectedCongresso]}
+              </h1>
+              <p className="text-muted-foreground">
+                Gerenciamento de inscrições
+              </p>
+            </div>
           </div>
           <div className="flex items-center gap-3">
             <Button
@@ -517,6 +558,9 @@ export default function AdminPage() {
                     Temas Livres
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    Status Pagamento
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Data
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
@@ -586,6 +630,42 @@ export default function AdminPage() {
                           </span>
                         ) : (
                           <span className="text-xs text-muted-foreground">Não</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-4">
+                        {editingInscricaoId === inscricao.id ? (
+                          <div className="flex gap-2">
+                            <input
+                              type="text"
+                              value={editingPaymentValue}
+                              onChange={(e) => setEditingPaymentValue(e.target.value)}
+                              className="flex-1 px-2 py-1 text-sm border border-border rounded bg-background"
+                              placeholder="Digite o status"
+                            />
+                            <button
+                              onClick={() => handleSavePaymentStatus(inscricao.id)}
+                              className="px-2 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700"
+                            >
+                              Salvar
+                            </button>
+                            <button
+                              onClick={() => setEditingInscricaoId(null)}
+                              className="px-2 py-1 text-xs bg-gray-300 text-gray-800 rounded hover:bg-gray-400"
+                            >
+                              Cancelar
+                            </button>
+                          </div>
+                        ) : (
+                          <div
+                            onClick={() => startEditingPaymentStatus(inscricao)}
+                            className="cursor-pointer p-2 rounded hover:bg-muted"
+                          >
+                            {inscricao.status_pagamento ? (
+                              <p className="text-sm text-foreground">{inscricao.status_pagamento}</p>
+                            ) : (
+                              <p className="text-sm text-muted-foreground italic">Clique para adicionar status</p>
+                            )}
+                          </div>
                         )}
                       </td>
                       <td className="px-4 py-4">
