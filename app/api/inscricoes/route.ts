@@ -144,12 +144,12 @@ export async function GET(request: Request) {
       .select("*")
       .eq("congresso", congresso);
 
-    const { data: escolhasCounts } = await supabase
+    const { data: todasEscolhas } = await supabase
       .from("escolhas_inscrito")
-      .select("workshop_id, count");
+      .select("workshop_id");
 
     const vagas_map = new Map();
-    (escolhasCounts || []).forEach((e: any) => {
+    (todasEscolhas || []).forEach((e: any) => {
       vagas_map.set(e.workshop_id, (vagas_map.get(e.workshop_id) || 0) + 1);
     });
 
