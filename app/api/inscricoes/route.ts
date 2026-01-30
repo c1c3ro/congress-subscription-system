@@ -113,61 +113,55 @@ export async function GET(request: Request) {
       .order("created_at", { ascending: false });
 
     if (error) {
-      console.error("Erro ao buscar inscrições:", error);
+      console.error("[v0] Erro ao buscar inscrições:", error);
       return NextResponse.json(
-        { error: "Erro ao buscar inscrições" },
+        { error: "Erro ao buscar inscrições", details: String(error) },
         { status: 500 }
       );
     }
 
-    // Buscar escolhas de workshop e temas livres para cada inscrito
-    const inscricoesComEscolhas = await Promise.all(
-      (inscricoes || []).map(async (inscricao) => {
-        const { data: escolha } = await supabase
-          .from("escolhas_inscrito")
-          .select("*, workshops(*)")
-          .eq("inscrito_id", inscricao.id)
-          .maybeSingle();
+    // Buscar escolhas com informações de workshops em uma única query
+    const { data: escolhas } = await supabase
+      .from("escolhas_inscrito")
+      .select("inscrito_id, participa_temas_livres, workshop_id, workshops(id, titulo)");
 
-        return {
-          ...inscricao,
-          escolha: escolha
-            ? {
-                workshop: escolha.workshops?.titulo || null,
-                participa_temas_livres: escolha.participa_temas_livres,
-              }
-            : null,
-        };
-      })
-    );
+    const escolhasMap = new Map();
+    (escolhas || []).forEach((e: any) => {
+      escolhasMap.set(e.inscrito_id, {
+        workshop: e.workshops?.titulo || null,
+        participa_temas_livres: e.participa_temas_livres,
+      });
+    });
 
-    // Buscar estatísticas de workshops
+    const inscricoesComEscolhas = (inscricoes || []).map((inscricao) => ({
+      ...inscricao,
+      escolha: escolhasMap.get(inscricao.id) || null,
+    }));
+
+    // Buscar workshops com contagem de vagas
     const { data: workshops } = await supabase
       .from("workshops")
       .select("*")
       .eq("congresso", congresso);
 
-    const workshopsComVagas = await Promise.all(
-      (workshops || []).map(async (workshop) => {
-        const { count } = await supabase
-          .from("escolhas_inscrito")
-          .select("*", { count: "exact", head: true })
-          .eq("workshop_id", workshop.id);
-        return {
-          ...workshop,
-          vagas_ocupadas: count || 0,
-        };
-      })
-    );
-
-    // Contar participantes de Temas Livres
-    const { data: participantesTemasLivres } = await supabase
+    const { data: escolhasCounts } = await supabase
       .from("escolhas_inscrito")
-      .select("inscrito_id, participa_temas_livres, inscricoes!inner(congresso)")
-      .eq("participa_temas_livres", true)
-      .eq("inscricoes.congresso", congresso);
+      .select("workshop_id, count");
 
-    const totalTemasLivres = participantesTemasLivres?.length || 0;
+    const vagas_map = new Map();
+    (escolhasCounts || []).forEach((e: any) => {
+      vagas_map.set(e.workshop_id, (vagas_map.get(e.workshop_id) || 0) + 1);
+    });
+
+    const workshopsComVagas = (workshops || []).map((workshop) => ({
+      ...workshop,
+      vagas_ocupadas: vagas_map.get(workshop.id) || 0,
+    }));
+
+    // Contar Temas Livres
+    const temasLivres = escolhasMap.size > 0
+      ? Array.from(escolhasMap.values()).filter((e: any) => e.participa_temas_livres).length
+      : 0;
 
     // Calcular estatísticas
     const stats = {
@@ -183,12 +177,12 @@ export async function GET(request: Request) {
       inscricoes: inscricoesComEscolhas,
       stats,
       workshops: workshopsComVagas,
-      temasLivres: { total: totalTemasLivres },
+      temasLivres: { total: temasLivres },
     });
   } catch (error) {
-    console.error("Erro:", error);
+    console.error("[v0] Erro na API GET inscrições:", error);
     return NextResponse.json(
-      { error: "Erro interno do servidor" },
+      { error: "Erro interno do servidor", details: String(error) },
       { status: 500 }
     );
   }
