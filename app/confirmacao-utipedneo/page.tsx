@@ -9,6 +9,11 @@ import Image from "next/image";
 import QRCode from "qrcode";
 import { formatCPF, validateCPF } from "@/lib/cpf";
 
+const CONGRESSO = "utipedneo";
+const CONGRESSO_NOME = "III Congresso de UTI Pediátrica e Neonatal do Cariri";
+const LOGO_URL = "/logo-uti-ped-neo.webp";
+const COLOR_THEME = "pink";
+
 interface Workshop {
   id: string;
   titulo: string;
@@ -44,7 +49,7 @@ interface Escolha {
   };
 }
 
-export default function EscolhaWorkshopPage() {
+export default function ConfirmacaoUTIPedNeoPage() {
   const [step, setStep] = useState<"cpf" | "escolha" | "confirmacao">("cpf");
   const [cpf, setCpf] = useState("");
   const [cpfError, setCpfError] = useState("");
@@ -59,14 +64,14 @@ export default function EscolhaWorkshopPage() {
   const [participaTemasLivres, setParticipaTemasLivres] = useState(false);
   
   const [escolhaConfirmada, setEscolhaConfirmada] = useState<Escolha | null>(null);
+  const [noiteSoleneInfo, setNoiteSoleneInfo] = useState<{
+    pode_participar: boolean;
+    total_confirmados: number;
+    limite_vagas: number;
+  } | null>(null);
   
   const qrCodeRef = useRef<HTMLCanvasElement>(null);
 
-  const congressoNome = inscrito?.congresso === "uti" 
-    ? "III Congresso de UTI" 
-    : "III Congresso de UTI Pediátrica e Neonatal";
-
-  // Validar CPF ao digitar
   const handleCpfChange = (value: string) => {
     const formatted = formatCPF(value);
     setCpf(formatted);
@@ -82,7 +87,6 @@ export default function EscolhaWorkshopPage() {
     }
   };
 
-  // Gerar QR Code
   useEffect(() => {
     if (step === "confirmacao" && inscrito && qrCodeRef.current) {
       QRCode.toCanvas(
@@ -100,7 +104,6 @@ export default function EscolhaWorkshopPage() {
     }
   }, [step, inscrito]);
 
-  // Buscar dados do inscrito
   const handleBuscarInscrito = async () => {
     const cpfLimpo = cpf.replace(/\D/g, "");
     
@@ -119,7 +122,7 @@ export default function EscolhaWorkshopPage() {
     setCpfError("");
 
     try {
-      const response = await fetch(`/api/workshops?cpf=${cpfLimpo}`);
+      const response = await fetch(`/api/workshops?cpf=${cpfLimpo}&congresso=${CONGRESSO}`);
       const data = await response.json();
 
       if (!response.ok) {
@@ -145,7 +148,6 @@ export default function EscolhaWorkshopPage() {
     }
   };
 
-  // Confirmar escolhas
   const handleConfirmarEscolhas = async () => {
     if (!inscrito) return;
 
@@ -172,6 +174,21 @@ export default function EscolhaWorkshopPage() {
       }
 
       setEscolhaConfirmada(data.escolha);
+
+      // Incrementar contador de Noite Solene
+      try {
+        const soleneResponse = await fetch("/api/noite-solene", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ inscrito_id: inscrito.id }),
+        });
+        const soleneData = await soleneResponse.json();
+        setNoiteSoleneInfo(soleneData);
+        console.log("[v0] Noite Solene atualizada:", soleneData);
+      } catch (err) {
+        console.error("[v0] Erro ao atualizar Noite Solene:", err);
+      }
+
       setStep("confirmacao");
     } catch (err) {
       setError("Erro ao conectar com o servidor");
@@ -181,31 +198,26 @@ export default function EscolhaWorkshopPage() {
   };
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-[#FDF6F7] to-white flex items-center justify-center p-4">
-      <Card className="w-full max-w-lg">
+    <main className="min-h-screen bg-gradient-to-b from-pink-50 to-white flex items-center justify-center p-4">
+      <Card className="w-full max-w-lg border-2 border-pink-200">
         <CardContent className="pt-8 pb-8">
           <div className="flex justify-center mb-6">
             <Image
-              src="/logo.webp"
-              alt="Núcleo de Carreira em Saúde"
-              width={180}
-              height={60}
-              className="object-contain"
+              src={LOGO_URL || "/placeholder.svg"}
+              alt={CONGRESSO_NOME}
+              width={220}
+              height={120}
+              className="object-contain max-h-28"
             />
           </div>
 
-          {/* Step: CPF */}
           {step === "cpf" && (
             <div className="space-y-6">
               <div className="text-center">
-                <h1 className="text-2xl font-bold text-[#7D1128] mb-2">
-                  Escolha de Workshop
-                </h1>
-                <p className="text-muted-foreground">
-                  Digite seu CPF para acessar suas opções
+                <p className="text-sm text-rose-700 font-semibold mb-2">
+                  Confirmação de Presença
                 </p>
               </div>
-
               <div className="space-y-4">
                 <div>
                   <Label htmlFor="cpf">CPF</Label>
@@ -238,7 +250,6 @@ export default function EscolhaWorkshopPage() {
             </div>
           )}
 
-          {/* Step: Escolha */}
           {step === "escolha" && inscrito && (
             <div className="space-y-6">
               <div className="text-center">
@@ -246,11 +257,10 @@ export default function EscolhaWorkshopPage() {
                   Olá, {inscrito.nome_completo.split(" ")[0]}!
                 </h1>
                 <p className="text-sm text-muted-foreground">
-                  {congressoNome}
+                  {CONGRESSO_NOME}
                 </p>
               </div>
 
-              {/* Workshops */}
               <div className="space-y-3">
                 <Label className="text-base font-semibold">
                   Escolha seu Workshop:
@@ -297,7 +307,6 @@ export default function EscolhaWorkshopPage() {
                 })}
               </div>
 
-              {/* Temas Livres */}
               {temasLivres && (
                 <div className="space-y-3 pt-4 border-t">
                   <Label className="text-base font-semibold">
@@ -359,7 +368,6 @@ export default function EscolhaWorkshopPage() {
             </div>
           )}
 
-          {/* Step: Confirmação */}
           {step === "confirmacao" && inscrito && escolhaConfirmada && (
             <div className="space-y-6 text-center">
               <div>
@@ -375,7 +383,7 @@ export default function EscolhaWorkshopPage() {
                   {inscrito.nome_completo}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {congressoNome}
+                  {CONGRESSO_NOME}
                 </p>
               </div>
 
@@ -393,6 +401,22 @@ export default function EscolhaWorkshopPage() {
                   </p>
                 </div>
               </div>
+
+              {noiteSoleneInfo && noiteSoleneInfo.pode_participar && (
+                <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg p-4 border-2 border-purple-200">
+                  <div className="flex gap-3">
+                    <div className="text-2xl">🎉</div>
+                    <div className="text-left">
+                      <p className="font-semibold text-purple-900 mb-1">
+                        Parabéns!
+                      </p>
+                      <p className="text-sm text-purple-800">
+                        Você é uma das <strong>primeiras 150 inscrições</strong> confirmadas e poderá participar da <strong>Noite Solene</strong> do congresso!
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <div className="space-y-2">
                 <p className="text-sm text-muted-foreground">

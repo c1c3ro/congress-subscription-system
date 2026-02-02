@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS workshops (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   congresso TEXT NOT NULL CHECK (congresso IN ('uti', 'utipedneo')),
   titulo TEXT NOT NULL,
-  vagas_total INTEGER NOT NULL DEFAULT 3,
+  vagas_total INTEGER NOT NULL DEFAULT 25,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS workshops (
 CREATE TABLE IF NOT EXISTS temas_livres (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   congresso TEXT NOT NULL UNIQUE CHECK (congresso IN ('uti', 'utipedneo')),
-  vagas_total INTEGER NOT NULL DEFAULT 3,
+  vagas_total INTEGER NOT NULL DEFAULT 25,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -50,19 +50,19 @@ CREATE POLICY "Permitir exclusão de escolhas" ON escolhas_inscrito FOR DELETE U
 
 -- Inserir workshops fictícios para UTI
 INSERT INTO workshops (congresso, titulo, vagas_total) VALUES
-  ('uti', 'Ventilação Mecânica Avançada', 3),
-  ('uti', 'Monitorização Hemodinâmica', 3),
-  ('uti', 'Sedação e Analgesia em UTI', 3),
-  ('uti', 'Ultrassom à Beira do Leito', 3);
+  ('uti', 'Ventilação Mecânica Avançada', 25),
+  ('uti', 'Monitorização Hemodinâmica', 25),
+  ('uti', 'Sedação e Analgesia em UTI', 25),
+  ('uti', 'Ultrassom à Beira do Leito', 25);
 
 -- Inserir workshops fictícios para UTI Pediátrica e Neonatal
 INSERT INTO workshops (congresso, titulo, vagas_total) VALUES
-  ('utipedneo', 'Reanimação Neonatal', 3),
-  ('utipedneo', 'Ventilação em Pediatria', 3),
-  ('utipedneo', 'Acesso Vascular Pediátrico', 3),
-  ('utipedneo', 'Nutrição Enteral Neonatal', 3);
+  ('utipedneo', 'Reanimação Neonatal', 25),
+  ('utipedneo', 'Ventilação em Pediatria', 25),
+  ('utipedneo', 'Acesso Vascular Pediátrico', 25),
+  ('utipedneo', 'Nutrição Enteral Neonatal', 25);
 
 -- Inserir controle de vagas para Temas Livres
 INSERT INTO temas_livres (congresso, vagas_total) VALUES
-  ('uti', 3),
-  ('utipedneo', 3);
+  ('uti', 25),
+  ('utipedneo', 25);

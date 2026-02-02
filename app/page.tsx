@@ -20,6 +20,8 @@ interface Inscricao {
   area_outro: string | null;
   modalidade: string;
   hospital_parceiro: string | null;
+  status_pagamento: string | null;
+  participa_noite_solene: boolean;
   created_at: string;
   escolha: {
     workshop: string | null;
@@ -71,6 +73,11 @@ export default function AdminPage() {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [filter, setFilter] = useState<string>("all");
+  const [editingPaymentStatus, setEditingPaymentStatus] = useState<string | null>(null);
+  const [editingInscricaoId, setEditingInscricaoId] = useState<string | null>(null);
+  const [editingPaymentValue, setEditingPaymentValue] = useState<string>("");
+  const [editingNoiteSoleneId, setEditingNoiteSoleneId] = useState<string | null>(null);
+  const [noiteSoleneCounter, setNoiteSoleneCounter] = useState({ total_confirmados: 0, limite_vagas: 150 });
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -98,12 +105,19 @@ export default function AdminPage() {
 
   const loadData = async (congresso: Congresso) => {
     try {
-      const response = await fetch(`/api/inscricoes?congresso=${congresso}`);
-      const data = await response.json();
-      setInscricoes(data.inscricoes || []);
-      setWorkshops(data.workshops || []);
-      setTemasLivresTotal(data.temasLivres?.total || 0);
-      setStats(data.stats || {
+      const [inscricaoResponse, soleneResponse] = await Promise.all([
+        fetch(`/api/inscricoes?congresso=${congresso}`),
+        fetch(`/api/noite-solene`),
+      ]);
+
+      const inscricaoData = await inscricaoResponse.json();
+      const soleneData = await soleneResponse.json();
+
+      setInscricoes(inscricaoData.inscricoes || []);
+      setWorkshops(inscricaoData.workshops || []);
+      setTemasLivresTotal(inscricaoData.temasLivres?.total || 0);
+      setNoiteSoleneCounter(soleneData);
+      setStats(inscricaoData.stats || {
         total: 0,
         estudantes: 0,
         profissionais: 0,
@@ -143,6 +157,72 @@ export default function AdminPage() {
     } catch (error) {
       console.error("Error removing inscription:", error);
       alert("Erro ao remover inscrição");
+    }
+  }
+
+  const handleSavePaymentStatus = async (id: string) => {
+    try {
+      console.log("[v0] Salvando status de pagamento:", { id, status: editingPaymentValue });
+      
+      const response = await fetch(`/api/inscricoes/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status_pagamento: editingPaymentValue }),
+      });
+
+      const responseData = await response.json();
+      console.log("[v0] Resposta do servidor:", { status: response.status, data: responseData });
+
+      if (response.ok && selectedCongresso) {
+        console.log("[v0] Atualização bem-sucedida, recarregando dados");
+        await loadData(selectedCongresso);
+        setEditingInscricaoId(null);
+        setEditingPaymentValue("");
+      } else {
+        console.error("[v0] Erro na resposta:", responseData);
+        alert("Erro ao atualizar status de pagamento: " + (responseData.error || "desconhecido"));
+      }
+    } catch (error) {
+      console.error("[v0] Erro na requisição:", error);
+      alert("Erro ao atualizar status de pagamento: " + String(error));
+    }
+  }
+
+  const startEditingPaymentStatus = (inscricao: Inscricao) => {
+    setEditingInscricaoId(inscricao.id);
+    setEditingPaymentValue(inscricao.status_pagamento || "");
+  }
+
+  const handleToggleNoiteSolene = async (inscricao: Inscricao) => {
+    if (editingNoiteSoleneId === inscricao.id) return; // Evitar múltiplos cliques
+    
+    setEditingNoiteSoleneId(inscricao.id);
+    
+    try {
+      const novoValor = !inscricao.participa_noite_solene;
+      console.log("[v0] Alterando Noite Solene:", { id: inscricao.id, novoValor });
+      
+      const response = await fetch(`/api/inscricoes/${inscricao.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ participa_noite_solene: novoValor }),
+      });
+
+      const responseData = await response.json();
+      console.log("[v0] Resposta do servidor:", { status: response.status, data: responseData });
+
+      if (response.ok && selectedCongresso) {
+        console.log("[v0] Atualização bem-sucedida, recarregando dados");
+        await loadData(selectedCongresso);
+      } else {
+        console.error("[v0] Erro na resposta:", responseData);
+        alert("Erro ao atualizar Noite Solene: " + (responseData.error || "desconhecido"));
+      }
+    } catch (error) {
+      console.error("[v0] Erro na requisição:", error);
+      alert("Erro ao atualizar Noite Solene: " + String(error));
+    } finally {
+      setEditingNoiteSoleneId(null);
     }
   }
 
@@ -259,38 +339,40 @@ export default function AdminPage() {
               Escolha qual congresso você deseja gerenciar
             </p>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <button
                 onClick={() => handleSelectCongresso("uti")}
-                className="p-6 rounded-xl border-2 border-border hover:border-primary hover:bg-primary/5 transition-all text-left group"
+                className="p-6 rounded-xl border-2 border-green-200 hover:border-green-400 hover:bg-green-50 transition-all text-center group"
               >
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
-                  <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                  </svg>
+                <div className="flex justify-center mb-4">
+                  <Image
+                    src="/logo-uti-adulto.webp"
+                    alt="III Congresso de UTI"
+                    width={200}
+                    height={120}
+                    className="w-full max-w-sm h-auto"
+                  />
                 </div>
-                <h2 className="text-lg font-semibold text-foreground mb-1">
-                  III Congresso de UTI
-                </h2>
-                <p className="text-sm text-muted-foreground">
-                  Gerenciar inscrições do Congresso de UTI
+                <p className="text-xs text-muted-foreground">
+                  Clique para gerenciar inscrições
                 </p>
               </button>
 
               <button
                 onClick={() => handleSelectCongresso("utipedneo")}
-                className="p-6 rounded-xl border-2 border-border hover:border-primary hover:bg-primary/5 transition-all text-left group"
+                className="p-6 rounded-xl border-2 border-pink-200 hover:border-pink-400 hover:bg-pink-50 transition-all text-center group"
               >
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
-                  <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                  </svg>
+                <div className="flex justify-center mb-4">
+                  <Image
+                    src="/logo-uti-ped-neo.webp"
+                    alt="III Congresso de UTI Pediátrica e Neonatal"
+                    width={200}
+                    height={120}
+                    className="w-full max-w-sm h-auto"
+                  />
                 </div>
-                <h2 className="text-lg font-semibold text-foreground mb-1">
-                  III Congresso de UTI Pediátrica e Neonatal
-                </h2>
-                <p className="text-sm text-muted-foreground">
-                  Gerenciar inscrições do Congresso de UTI Pediátrica e Neonatal
+                <p className="text-xs text-muted-foreground">
+                  Clique para gerenciar inscrições
                 </p>
               </button>
             </div>
@@ -325,13 +407,22 @@ export default function AdminPage() {
       <div className="container mx-auto px-4 py-12 max-w-7xl">
         {/* Header */}
         <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
-              {congressoNames[selectedCongresso]}
-            </h1>
-            <p className="text-muted-foreground">
-              Gerenciamento de inscrições
-            </p>
+          <div className="flex items-center gap-4">
+            <Image
+              src={selectedCongresso === "uti" ? "/logo-uti-adulto.webp" : "/logo-uti-ped-neo.webp"}
+              alt={congressoNames[selectedCongresso]}
+              width={150}
+              height={100}
+              className="h-24 w-auto"
+            />
+            <div>
+              <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
+                {congressoNames[selectedCongresso]}
+              </h1>
+              <p className="text-muted-foreground">
+                Gerenciamento de inscrições
+              </p>
+            </div>
           </div>
           <div className="flex items-center gap-3">
             <Button
@@ -460,6 +551,31 @@ export default function AdminPage() {
           </div>
         </div>
 
+        {/* Noite Solene Counter */}
+        <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-6 border-2 border-purple-200 mb-8">
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            <div>
+              <h3 className="text-lg font-semibold text-foreground mb-2">Noite Solene</h3>
+              <p className="text-sm text-muted-foreground">Primeiras 150 inscrições confirmadas</p>
+            </div>
+            <div className="text-center">
+              <p className="text-3xl font-bold text-purple-600">{noiteSoleneCounter.total_confirmados}</p>
+              <p className="text-sm text-muted-foreground">de {noiteSoleneCounter.limite_vagas} vagas</p>
+              {noiteSoleneCounter.total_confirmados >= noiteSoleneCounter.limite_vagas && (
+                <p className="text-xs text-pink-600 font-semibold mt-2">✓ COMPLETO</p>
+              )}
+            </div>
+          </div>
+          <div className="mt-4 bg-white rounded-full h-2 overflow-hidden">
+            <div
+              className="bg-gradient-to-r from-purple-500 to-pink-500 h-full transition-all duration-300"
+              style={{
+                width: `${Math.min(100, (noiteSoleneCounter.total_confirmados / noiteSoleneCounter.limite_vagas) * 100)}%`,
+              }}
+            ></div>
+          </div>
+        </div>
+
         {/* Inscriptions Table */}
         <div className="bg-card rounded-xl shadow-lg border border-border overflow-hidden">
           <div className="p-6 border-b border-border">
@@ -517,6 +633,12 @@ export default function AdminPage() {
                     Temas Livres
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    Status Pagamento
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    Noite Solene
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Data
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
@@ -527,7 +649,7 @@ export default function AdminPage() {
               <tbody className="divide-y divide-border">
                 {filteredInscricoes.length === 0 ? (
                   <tr>
-                    <td colSpan={10} className="px-4 py-12 text-center text-muted-foreground">
+                    <td colSpan={11} className="px-4 py-12 text-center text-muted-foreground">
                       Nenhuma inscrição encontrada
                     </td>
                   </tr>
@@ -587,6 +709,58 @@ export default function AdminPage() {
                         ) : (
                           <span className="text-xs text-muted-foreground">Não</span>
                         )}
+                      </td>
+                      <td className="px-4 py-4">
+                        {editingInscricaoId === inscricao.id ? (
+                          <div className="flex gap-2">
+                            <input
+                              type="text"
+                              value={editingPaymentValue}
+                              onChange={(e) => setEditingPaymentValue(e.target.value)}
+                              className="flex-1 px-2 py-1 text-sm border border-border rounded bg-background"
+                              placeholder="Digite o status"
+                            />
+                            <button
+                              onClick={() => handleSavePaymentStatus(inscricao.id)}
+                              className="px-2 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700"
+                            >
+                              Salvar
+                            </button>
+                            <button
+                              onClick={() => setEditingInscricaoId(null)}
+                              className="px-2 py-1 text-xs bg-gray-300 text-gray-800 rounded hover:bg-gray-400"
+                            >
+                              Cancelar
+                            </button>
+                          </div>
+                        ) : (
+                          <div
+                            onClick={() => startEditingPaymentStatus(inscricao)}
+                            className="cursor-pointer p-2 rounded hover:bg-muted"
+                          >
+                            {inscricao.status_pagamento ? (
+                              <p className="text-sm text-foreground">{inscricao.status_pagamento}</p>
+                            ) : (
+                              <p className="text-sm text-muted-foreground italic">Clique para adicionar status</p>
+                            )}
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-4 py-4">
+                        <button
+                          onClick={() => handleToggleNoiteSolene(inscricao)}
+                          disabled={editingNoiteSoleneId === inscricao.id}
+                          className="cursor-pointer p-2 rounded hover:bg-muted transition-colors disabled:opacity-50"
+                          title="Clique para alterar"
+                        >
+                          {inscricao.participa_noite_solene ? (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                              ✓ Sim
+                            </span>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">Não</span>
+                          )}
+                        </button>
                       </td>
                       <td className="px-4 py-4">
                         <p className="text-sm text-muted-foreground">

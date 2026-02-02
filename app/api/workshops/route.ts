@@ -1,22 +1,28 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
-// GET - Buscar inscrito por CPF e retornar workshops disponíveis
+// GET - Buscar inscrito por CPF e congresso e retornar workshops disponíveis
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const cpf = searchParams.get("cpf");
+  const congresso = searchParams.get("congresso");
 
   if (!cpf) {
     return NextResponse.json({ error: "CPF é obrigatório" }, { status: 400 });
   }
 
+  if (!congresso || !["uti", "utipedneo"].includes(congresso)) {
+    return NextResponse.json({ error: "Congresso inválido" }, { status: 400 });
+  }
+
   const supabase = await createClient();
 
-  // Buscar inscrito pelo CPF
+  // Buscar inscrito pelo CPF e congresso específico
   const { data: inscrito, error: inscritoError } = await supabase
     .from("inscricoes")
     .select("*")
     .eq("cpf", cpf.replace(/\D/g, ""))
+    .eq("congresso", congresso)
     .maybeSingle();
 
   if (inscritoError) {
@@ -25,7 +31,7 @@ export async function GET(request: Request) {
 
   if (!inscrito) {
     return NextResponse.json(
-      { error: "CPF não encontrado. Verifique se você está inscrito." },
+      { error: "CPF não encontrado neste congresso. Verifique se você está inscrito." },
       { status: 404 }
     );
   }

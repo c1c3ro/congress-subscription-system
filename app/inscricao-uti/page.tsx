@@ -8,29 +8,29 @@ export const metadata = {
 
 export default function InscricaoUTIPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-secondary/10 via-background to-muted py-12 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50 py-12 px-4">
       <div className="max-w-xl mx-auto">
         <div className="flex justify-center mb-8">
           <Image
-            src="/logo.webp"
-            alt="Núcleo de Carreira em Saúde"
-            width={280}
-            height={84}
-            className="w-full max-w-[280px]"
+            src="/logo-uti-adulto.webp"
+            alt="III Congresso de UTI - Terapia Intensiva"
+            width={350}
+            height={150}
+            className="w-full max-w-sm h-auto"
           />
         </div>
 
-        <div className="bg-card rounded-2xl shadow-xl border border-border p-8">
+        <div className="bg-white rounded-2xl shadow-xl border-2 border-green-200 p-8">
           <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold text-foreground mb-2">
-              III Congresso de UTI
-            </h1>
-            <p className="text-muted-foreground">
+            <p className="text-green-700 font-semibold text-sm mb-2">
+              Inscrição para o Congresso
+            </p>
+            <p className="text-muted-foreground text-sm">
               Preencha o formulário abaixo para realizar sua inscrição
             </p>
           </div>
 
-          <InscriptionForm congresso="uti" congressoNome="III Congresso de UTI" />
+          <InscriptionForm congresso="uti" congressoNome="III Congresso de Terapia Intensiva do Cariri" />
         </div>
       </div>
     </div>
