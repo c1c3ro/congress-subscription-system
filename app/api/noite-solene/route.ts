@@ -1,9 +1,9 @@
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient, createClient } from "@/lib/supabase/admin";
 import { NextResponse } from "next/server";
 
 export async function GET() {
   try {
-    const supabase = await createClient();
+    const supabase = createAdminClient();
 
     // Buscar todos os registros de noite_solene_counter
     const { data: counters, error } = await supabase
@@ -45,7 +45,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const { inscrito_id } = await request.json();
-    const supabase = await createClient();
+    const supabase = createAdminClient();
 
     // Buscar todos os contadores
     const { data: counters, error: fetchError } = await supabase

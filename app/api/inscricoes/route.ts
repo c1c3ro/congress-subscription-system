@@ -200,7 +200,9 @@ export async function DELETE(request: Request) {
       );
     }
 
-    const supabase = await createClient();
+    // Usar cliente admin para operações administrativas
+    const { createAdminClient } = await import("@/lib/supabase/admin");
+    const supabase = createAdminClient();
 
     const { error } = await supabase
       .from("inscricoes")
