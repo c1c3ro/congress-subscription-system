@@ -76,6 +76,7 @@ export default function AdminPage() {
   const [editingPaymentStatus, setEditingPaymentStatus] = useState<string | null>(null);
   const [editingInscricaoId, setEditingInscricaoId] = useState<string | null>(null);
   const [editingPaymentValue, setEditingPaymentValue] = useState<string>("");
+  const [editingNoiteSoleneId, setEditingNoiteSoleneId] = useState<string | null>(null);
   const [noiteSoleneCounter, setNoiteSoleneCounter] = useState({ total_confirmados: 0, limite_vagas: 150 });
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -190,6 +191,39 @@ export default function AdminPage() {
   const startEditingPaymentStatus = (inscricao: Inscricao) => {
     setEditingInscricaoId(inscricao.id);
     setEditingPaymentValue(inscricao.status_pagamento || "");
+  }
+
+  const handleToggleNoiteSolene = async (inscricao: Inscricao) => {
+    if (editingNoiteSoleneId === inscricao.id) return; // Evitar múltiplos cliques
+    
+    setEditingNoiteSoleneId(inscricao.id);
+    
+    try {
+      const novoValor = !inscricao.participa_noite_solene;
+      console.log("[v0] Alterando Noite Solene:", { id: inscricao.id, novoValor });
+      
+      const response = await fetch(`/api/inscricoes/${inscricao.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ participa_noite_solene: novoValor }),
+      });
+
+      const responseData = await response.json();
+      console.log("[v0] Resposta do servidor:", { status: response.status, data: responseData });
+
+      if (response.ok && selectedCongresso) {
+        console.log("[v0] Atualização bem-sucedida, recarregando dados");
+        await loadData(selectedCongresso);
+      } else {
+        console.error("[v0] Erro na resposta:", responseData);
+        alert("Erro ao atualizar Noite Solene: " + (responseData.error || "desconhecido"));
+      }
+    } catch (error) {
+      console.error("[v0] Erro na requisição:", error);
+      alert("Erro ao atualizar Noite Solene: " + String(error));
+    } finally {
+      setEditingNoiteSoleneId(null);
+    }
   }
 
   const formatCPF = (cpf: string) => {
@@ -713,13 +747,20 @@ export default function AdminPage() {
                         )}
                       </td>
                       <td className="px-4 py-4">
-                        {inscricao.participa_noite_solene ? (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                            ✓ Sim
-                          </span>
-                        ) : (
-                          <span className="text-xs text-muted-foreground">Não</span>
-                        )}
+                        <button
+                          onClick={() => handleToggleNoiteSolene(inscricao)}
+                          disabled={editingNoiteSoleneId === inscricao.id}
+                          className="cursor-pointer p-2 rounded hover:bg-muted transition-colors disabled:opacity-50"
+                          title="Clique para alterar"
+                        >
+                          {inscricao.participa_noite_solene ? (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                              ✓ Sim
+                            </span>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">Não</span>
+                          )}
+                        </button>
                       </td>
                       <td className="px-4 py-4">
                         <p className="text-sm text-muted-foreground">
