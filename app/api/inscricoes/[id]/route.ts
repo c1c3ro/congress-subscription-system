@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { NextResponse } from "next/server";
 
 export async function PATCH(
@@ -9,9 +9,8 @@ export async function PATCH(
     const { id } = params;
     const data = await request.json();
     
-    console.log("[v0] Atualizando inscrito:", id, "com dados:", data);
-    
-    const supabase = await createClient();
+    // Usar cliente admin para bypass RLS em operações administrativas
+    const supabase = createAdminClient();
 
     // Preparar objeto de atualização apenas com campos fornecidos
     const updateData: any = {};
@@ -36,7 +35,6 @@ export async function PATCH(
       );
     }
 
-    console.log("[v0] Atualização bem-sucedida:", result);
     return NextResponse.json({ success: true, data: result });
   } catch (error) {
     console.error("[v0] Erro:", error);
