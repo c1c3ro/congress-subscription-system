@@ -110,10 +110,10 @@ export function InscriptionForm({ congresso, congressoNome }: InscriptionFormPro
         </div>
         <h2 className="text-2xl font-bold text-foreground mb-2">Inscrição Realizada!</h2>
         <p className="text-muted-foreground mb-6">
-          Sua inscrição no {congressoNome} foi confirmada com sucesso.
+          Sua inscrição no {congressoNome} foi realizada com sucesso.
         </p>
         <p className="text-sm text-muted-foreground">
-          Em breve você receberá mais informações no e-mail cadastrado.
+          Em breve você receberá mais informações para prosseguir com o pagamento.
         </p>
       </div>
     );
