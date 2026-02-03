@@ -37,6 +37,7 @@ interface Inscrito {
   cpf: string;
   email: string;
   congresso: string;
+  participa_noite_solene: boolean;
 }
 
 interface Escolha {
