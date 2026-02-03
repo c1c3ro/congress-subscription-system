@@ -404,7 +404,7 @@ export default function AdminPage() {
   // Dashboard do Congresso
   return (
     <div className="min-h-screen bg-gradient-to-br from-secondary/10 via-background to-muted">
-      <div className="container mx-auto px-4 py-12 max-w-7xl">
+      <div className="container mx-auto px-4 py-12 max-w-11/12">
         {/* Header */}
         <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
           <div className="flex items-center gap-4">
