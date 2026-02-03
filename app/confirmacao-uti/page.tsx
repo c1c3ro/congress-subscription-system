@@ -233,7 +233,7 @@ export default function ConfirmacaoUTIPage() {
                     value={cpf}
                     onChange={(e) => handleCpfChange(e.target.value)}
                     maxLength={14}
-                    className={`text-center text-lg ${cpfError ? "border-red-500" : ""}`}
+                    className={`mt-4 text-center text-lg ${cpfError ? "border-red-500" : ""}`}
                   />
                   {cpfError && (
                     <p className="text-sm text-red-600 text-center mt-1">{cpfError}</p>
