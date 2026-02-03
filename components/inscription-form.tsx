@@ -113,7 +113,7 @@ export function InscriptionForm({ congresso, congressoNome }: InscriptionFormPro
           Sua inscrição no {congressoNome} foi realizada com sucesso.
         </p>
         <p className="text-sm text-muted-foreground">
-          Em breve você receberá mais informações para prosseguir com o pagamento.
+          Em breve você receberá mais informações da nossa equipe.
         </p>
       </div>
     );
