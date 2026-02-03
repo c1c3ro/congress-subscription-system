@@ -37,6 +37,7 @@ interface Inscrito {
   cpf: string;
   email: string;
   congresso: string;
+  participa_noite_solene: boolean;
 }
 
 interface Escolha {
@@ -407,6 +408,22 @@ export default function ConfirmacaoUTIPage() {
               </div>
 
               {noiteSoleneInfo && noiteSoleneInfo.pode_participar && (
+                <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg p-4 border-2 border-purple-200">
+                  <div className="flex gap-3">
+                    <div className="text-2xl">🎉</div>
+                    <div className="text-left">
+                      <p className="font-semibold text-purple-900 mb-1">
+                        Parabéns!
+                      </p>
+                      <p className="text-sm text-purple-800">
+                        Você é uma das <strong>primeiras 150 inscrições</strong> confirmadas e poderá participar da <strong>Noite Solene</strong> do congresso!
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {inscrito.participa_noite_solene && (
                 <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg p-4 border-2 border-purple-200">
                   <div className="flex gap-3">
                     <div className="text-2xl">🎉</div>
