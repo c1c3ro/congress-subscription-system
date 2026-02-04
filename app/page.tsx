@@ -771,7 +771,6 @@ const [expandedId, setExpandedId] = useState<string | null>(null);
         )}
       </tbody>
     </table>
-  </div>
           </div>
         </div>
       </div>
