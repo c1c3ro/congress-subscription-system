@@ -647,122 +647,131 @@ const [expandedId, setExpandedId] = useState<string | null>(null);
           </div>
 
             <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead className="bg-muted">
-                  <tr>
-                    <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Inscrito</th>
-                    <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Modalidade</th>
-                    <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Status Pagamento</th>
-                    <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider text-center">Noite Solene</th>
-                    <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider text-right">Ações</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {filteredInscricoes.length === 0 ? (
-                    <tr>
-                      <td colSpan={5} className="px-4 py-12 text-center text-muted-foreground">
-                        Nenhuma inscrição encontrada
-                      </td>
-                    </tr>
+    <table className="w-full text-left border-collapse">
+      <thead className="bg-muted">
+        <tr>
+          <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Inscrito</th>
+          <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Modalidade</th>
+          <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Status Pagamento</th>
+          <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider text-center">Noite Solene</th>
+          <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider text-right">Ações</th>
+        </tr>
+      </thead>
+      <tbody className="divide-y divide-border">
+        {filteredInscricoes.length === 0 ? (
+          <tr>
+            <td colSpan={5} className="px-4 py-12 text-center text-muted-foreground">
+              Nenhuma inscrição encontrada
+            </td>
+          </tr>
+        ) : (
+          filteredInscricoes.map((inscrito) => (
+            <React.Fragment key={inscrito.id}>
+              {/* Linha Principal */}
+              <tr 
+                onClick={() => setExpandedId(expandedId === inscrito.id ? null : inscrito.id)}
+                className={`group cursor-pointer transition-colors hover:bg-muted/50 ${expandedId === inscrito.id ? 'bg-muted/30' : ''}`}
+              >
+                <td className="px-4 py-4">
+                  <p className="font-bold text-primary text-sm leading-none">{inscrito.nome_completo}</p>
+                  <p className="text-xs text-muted-foreground mt-1.5 font-medium">{formatCPF(inscrito.cpf)}</p>
+                </td>
+                <td className="px-4 py-4">
+                  <span className="text-sm font-semibold text-indigo-600 dark:text-indigo-400">
+                    {getModalidadeLabel(inscrito.modalidade)}
+                    {inscrito.modalidade === "parceiro" && inscrito.hospital_parceiro && (
+                      <span className="text-muted-foreground italic font-normal text-xs ml-1"> 
+                        — {inscrito.hospital_parceiro}
+                      </span>
+                    )}
+                  </span>
+                </td>
+                <td className="px-4 py-4" onClick={(e) => e.stopPropagation()}>
+                  {editingInscricaoId === inscrito.id ? (
+                    <div className="flex gap-2">
+                      <input
+                        autoFocus
+                        type="text"
+                        value={editingPaymentValue}
+                        onChange={(e) => setEditingPaymentValue(e.target.value)}
+                        className="w-32 px-2 py-1 text-sm border border-primary rounded bg-background ring-2 ring-primary/20 outline-none"
+                      />
+                      <button 
+                        onClick={() => handleSavePaymentStatus(inscrito.id)} 
+                        className="p-1 text-green-600 hover:bg-green-50 rounded cursor-pointer"
+                        title="Salvar"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
+                      </button>
+                    </div>
                   ) : (
-                    filteredInscricoes.map((inscrito) => (
-                      <React.Fragment key={inscrito.id}>
-                        {/* Linha Principal - Clique para Expandir */}
-                        <tr 
-                          onClick={() => setExpandedId(expandedId === inscrito.id ? null : inscrito.id)}
-                          className={`group cursor-pointer transition-colors hover:bg-muted/50 ${expandedId === inscrito.id ? 'bg-muted/30' : ''}`}
-                        >
-                          <td className="px-4 py-4">
-                            <p className="font-medium text-foreground text-sm leading-none">{inscrito.nome_completo}</p>
-                            <p className="text-xs text-muted-foreground mt-1">{formatCPF(inscrito.cpf)}</p>
-                          </td>
-                          <td className="px-4 py-4">
-                            <span className="text-sm text-foreground">
-                              {getModalidadeLabel(inscrito.modalidade)}
-                              {inscrito.modalidade === "parceiro" && inscrito.hospital_parceiro && (
-                                <span className="text-muted-foreground italic"> - {inscrito.hospital_parceiro}</span>
-                              )}
-                            </span>
-                          </td>
-                          <td className="px-4 py-4" onClick={(e) => e.stopPropagation()}>
-                            {editingInscricaoId === inscrito.id ? (
-                              <div className="flex gap-2">
-                                <input
-                                  autoFocus
-                                  type="text"
-                                  value={editingPaymentValue}
-                                  onChange={(e) => setEditingPaymentValue(e.target.value)}
-                                  className="w-32 px-2 py-1 text-sm border border-border rounded bg-background"
-                                />
-                                <button onClick={() => handleSavePaymentStatus(inscrito.id)} className="px-2 py-1 text-xs bg-green-600 text-white rounded">Salvar</button>
-                                <button onClick={() => setEditingInscricaoId(null)} className="px-2 py-1 text-xs bg-gray-300 text-gray-800 rounded">X</button>
-                              </div>
-                            ) : (
-                              <div className="flex items-center gap-2 group/btn">
-                                <p className="text-sm text-foreground">{inscrito.status_pagamento || "Pendente"}</p>
-                                <button 
-                                  onClick={() => { setEditingInscricaoId(inscrito.id); setEditingPaymentValue(inscrito.status_pagamento || ""); }}
-                                  className="opacity-0 group-hover/btn:opacity-100 p-1 text-primary transition-opacity"
-                                >
-                                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
-                                </button>
-                              </div>
-                            )}
-                          </td>
-                          <td className="px-4 py-4 text-center">
-                            <button 
-                              onClick={(e) => { e.stopPropagation(); handleToggleNoiteSolene(inscrito); }}
-                              disabled={editingNoiteSoleneId === inscrito.id}
-                              className={`p-2 rounded-full transition-all cursor-pointer hover:bg-muted ${inscrito.participa_noite_solene ? 'text-green-600' : 'text-muted-foreground/30'}`}
-                            >
-                              {inscrito.participa_noite_solene ? (
-                                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
-                              ) : (
-                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                              )}
-                            </button>
-                          </td>
-                          <td className="px-4 py-4 text-right" onClick={(e) => e.stopPropagation()}>
-                            <button 
-                              onClick={() => handleRemoveInscricao(inscrito.id)}
-                              className="p-2 text-muted-foreground hover:text-destructive transition-colors cursor-pointer"
-                            >
-                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                            </button>
-                          </td>
-                        </tr>
-
-                        {/* Área Detalhada (Expansível) */}
-                        {expandedId === inscrito.id && (
-                          <tr className="bg-muted/20">
-                            <td colSpan={5} className="px-8 py-6 border-b border-border">
-                              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                <div className="space-y-2">
-                                  <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Contato</h4>
-                                  <p className="text-sm text-foreground"><strong>E-mail:</strong> {inscrito.email}</p>
-                                  <p className="text-sm text-foreground"><strong>Telefone:</strong> {formatPhone(inscrito.telefone)}</p>
-                                  <p className="text-sm text-foreground"><strong>Data Inscrição:</strong> {new Date(inscrito.created_at).toLocaleDateString('pt-BR')}</p>
-                                </div>
-                                <div className="space-y-2">
-                                  <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Acadêmico</h4>
-                                  <p className="text-sm text-foreground"><strong>Vínculo:</strong> {getTipoAlunoLabel(inscrito.tipo_aluno, inscrito.cidade_sao_camilo)}</p>
-                                  <p className="text-sm text-foreground"><strong>Área:</strong> {getAreaLabel(inscrito.area, inscrito.area_outro)}</p>
-                                </div>
-                                <div className="space-y-2">
-                                  <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Opções</h4>
-                                  <p className="text-sm text-foreground"><strong>Workshop:</strong> {inscrito.escolha?.workshop || "Nenhum"}</p>
-                                  <p className="text-sm text-foreground"><strong>Temas Livres:</strong> {inscrito.escolha?.participa_temas_livres ? "Sim" : "Não"}</p>
-                                </div>
-                              </div>
-                            </td>
-                          </tr>
-                        )}
-                      </React.Fragment>
-                    ))
+                    <div 
+                      onClick={() => { setEditingInscricaoId(inscrito.id); setEditingPaymentValue(inscrito.status_pagamento || ""); }}
+                      className="inline-flex items-center gap-2 cursor-pointer hover:bg-muted px-2 py-1 -ml-2 rounded-md transition-colors group/edit"
+                    >
+                      <span className="text-sm text-foreground font-medium group-hover/edit:text-primary">
+                        {inscrito.status_pagamento || "Pendente"}
+                      </span>
+                      <svg className="w-3 h-3 text-muted-foreground opacity-0 group-hover/edit:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                      </svg>
+                    </div>
                   )}
-                </tbody>
-              </table>
-            </div>
+                </td>
+                <td className="px-4 py-4 text-center">
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); handleToggleNoiteSolene(inscrito); }}
+                    disabled={editingNoiteSoleneId === inscrito.id}
+                    className={`p-2 rounded-full transition-all cursor-pointer hover:bg-muted inline-flex items-center justify-center ${inscrito.participa_noite_solene ? 'text-green-600' : 'text-muted-foreground/30'}`}
+                  >
+                    {inscrito.participa_noite_solene ? (
+                      <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
+                    ) : (
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    )}
+                  </button>
+                </td>
+                <td className="px-4 py-4 text-right" onClick={(e) => e.stopPropagation()}>
+                  <button 
+                    onClick={() => handleRemoveInscricao(inscrito.id)}
+                    className="p-2 text-muted-foreground hover:text-destructive transition-colors cursor-pointer"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                  </button>
+                </td>
+              </tr>
+
+              {/* Área Detalhada */}
+              {expandedId === inscrito.id && (
+                <tr className="bg-muted/20">
+                  <td colSpan={5} className="px-8 py-6 border-b border-border">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      <div className="space-y-2">
+                        <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Contato</h4>
+                        <p className="text-sm text-foreground"><strong>E-mail:</strong> {inscrito.email}</p>
+                        <p className="text-sm text-foreground"><strong>Telefone:</strong> {formatPhone(inscrito.telefone)}</p>
+                        <p className="text-sm text-foreground"><strong>Inscrição:</strong> {new Date(inscrito.created_at).toLocaleDateString('pt-BR')}</p>
+                      </div>
+                      <div className="space-y-2">
+                        <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Acadêmico</h4>
+                        <p className="text-sm text-foreground"><strong>Vínculo:</strong> {getTipoAlunoLabel(inscrito.tipo_aluno, inscrito.cidade_sao_camilo)}</p>
+                        <p className="text-sm text-foreground"><strong>Área:</strong> {getAreaLabel(inscrito.area, inscrito.area_outro)}</p>
+                      </div>
+                      <div className="space-y-2">
+                        <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Preferências</h4>
+                        <p className="text-sm text-foreground"><strong>Workshop:</strong> {inscrito.escolha?.workshop || "Nenhum"}</p>
+                        <p className="text-sm text-foreground"><strong>Temas Livres:</strong> {inscrito.escolha?.participa_temas_livres ? "Sim" : "Não"}</p>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              )}
+            </React.Fragment>
+          ))
+        )}
+      </tbody>
+    </table>
+  </div>
           </div>
         </div>
       </div>
