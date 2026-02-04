@@ -7,8 +7,8 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'Lançamento - NCS',
-  description: 'Confirme sua presença no lançamento do Núcleo de Carreira em Saúde',
+  title: 'III Congressos de UTI - NCS',
+  description: '',
   generator: '',
   icons: {
     icon: [
@@ -28,16 +28,16 @@ export const metadata: Metadata = {
     apple: '/apple-icon.png',
   },
   openGraph: {
-    title: 'Lançamento - NCS',               // pode personalizar
-    description: 'Confirme sua presença no lançamento do Núcleo de Carreira em Saúde',// idem
-    url: 'lancamento-ncs.vercel.app',// coloque o domínio real
+    title: 'III Congressos de UTI - NCS',               // pode personalizar
+    description: '',// idem
+    url: 'https://iii-congressos-ncs.vercel.app/',// coloque o domínio real
     images: [
       {
         url: '/ogimage.webp', // ou '/og-image.jpg' se estiver no public/
         alt: 'Imagem de pré-visualização OG'
       }
     ],
-    siteName: 'Lançamento - NCS'
+    siteName: 'III Congressos de UTI - NCS'
   },
 }
 
