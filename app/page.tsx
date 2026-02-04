@@ -267,6 +267,8 @@ export default function AdminPage() {
     return tipo;
   };
 
+const [expandedId, setExpandedId] = useState<string | null>(null);
+
   // Tela de Login
   if (!isAuthenticated) {
     return (
@@ -413,7 +415,7 @@ export default function AdminPage() {
   alert(`Link copiado: ${url}`); // Você pode substituir por um Toast se preferir
 };
 
-const [expandedId, setExpandedId] = useState<string | null>(null);
+
 
   // Dashboard do Congresso
   return (
