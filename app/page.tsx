@@ -676,9 +676,9 @@ export default function AdminPage() {
                         {/* Coluna Modalidade (Cores por categoria) */}
                         <td className="px-4 py-4">
                           <span className={`text-sm font-semibold ${
-                            inscrito.modalidade === 'profissional' ? 'text-emerald-600 dark:text-emerald-400' :
-                            inscrito.modalidade === 'estudante' ? 'text-sky-600 dark:text-sky-400' :
-                            'text-indigo-600 dark:text-indigo-400'
+                            inscrito.modalidade === 'profissional' ? 'bg-green-100 text-green-700' :
+                            inscrito.modalidade === 'estudante' ? 'bg-blue-100 text-blue-700' :
+                            'bg-purple-100 text-purple-700'
                           }`}>
                             {getModalidadeLabel(inscrito.modalidade)}
                             {inscrito.modalidade === "parceiro" && inscrito.hospital_parceiro && (
@@ -750,28 +750,29 @@ export default function AdminPage() {
 
                       {/* Área Detalhada */}
                       {expandedId === inscrito.id && (
-                        <tr className="bg-muted/20">
-                          <td colSpan={5} className="px-8 py-6 border-b border-border">
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                              <div className="space-y-2">
-                                <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Contato</h4>
-                                <p className="text-sm text-foreground"><strong>E-mail:</strong> {inscrito.email}</p>
-                                <p className="text-sm text-foreground"><strong>Telefone:</strong> {formatPhone(inscrito.telefone)}</p>
-                              </div>
-                              <div className="space-y-2">
-                                <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Acadêmico</h4>
-                                <p className="text-sm text-foreground"><strong>Vínculo:</strong> {getTipoAlunoLabel(inscrito.tipo_aluno, inscrito.cidade_sao_camilo)}</p>
-                                <p className="text-sm text-foreground"><strong>Área:</strong> {getAreaLabel(inscrito.area, inscrito.area_outro)}</p>
-                              </div>
-                              <div className="space-y-2">
-                                <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Preferências</h4>
-                                <p className="text-sm text-foreground"><strong>Workshop:</strong> {inscrito.escolha?.workshop || "Nenhum"}</p>
-                                <p className="text-sm text-foreground"><strong>Temas Livres:</strong> {inscrito.escolha?.participa_temas_livres ? "Sim" : "Não"}</p>
-                              </div>
+                      <tr className="bg-muted/20">
+                        <td colSpan={5} className="px-8 py-6 border-b border-border">
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div className="space-y-2">
+                              <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Contato</h4>
+                              <p className="text-sm text-foreground"><strong>E-mail:</strong> {inscrito.email}</p>
+                              <p className="text-sm text-foreground"><strong>Telefone:</strong> {formatPhone(inscrito.telefone)}</p>
+                              <p className="text-sm text-foreground"><strong>Inscrição:</strong> {new Date(inscrito.created_at).toLocaleDateString('pt-BR')}</p>
                             </div>
-                          </td>
-                        </tr>
-                      )}
+                            <div className="space-y-2">
+                              <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Acadêmico</h4>
+                              <p className="text-sm text-foreground"><strong>Vínculo:</strong> {getTipoAlunoLabel(inscrito.tipo_aluno, inscrito.cidade_sao_camilo)}</p>
+                              <p className="text-sm text-foreground"><strong>Área:</strong> {getAreaLabel(inscrito.area, inscrito.area_outro)}</p>
+                            </div>
+                            <div className="space-y-2">
+                              <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Preferências</h4>
+                              <p className="text-sm text-foreground"><strong>Workshop:</strong> {inscrito.escolha?.workshop || "Nenhum"}</p>
+                              <p className="text-sm text-foreground"><strong>Temas Livres:</strong> {inscrito.escolha?.participa_temas_livres ? "Sim" : "Não"}</p>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
                     </React.Fragment>
                   ))
                 )}
