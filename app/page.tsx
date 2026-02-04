@@ -267,6 +267,8 @@ export default function AdminPage() {
     return tipo;
   };
 
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+
   // Tela de Login
   if (!isAuthenticated) {
     return (
@@ -619,9 +621,7 @@ export default function AdminPage() {
           <div className="p-6 border-b border-border">
             <div className="flex items-center justify-between flex-wrap gap-4">
               <div>
-                <h2 className="text-xl font-semibold text-foreground">
-                  Lista de Inscritos
-                </h2>
+                <h2 className="text-xl font-semibold text-foreground">Lista de Inscritos</h2>
                 {filter !== "all" && (
                   <p className="text-sm text-muted-foreground mt-1">
                     Exibindo {filteredInscricoes.length} de {inscricoes.length} inscritos
@@ -631,7 +631,7 @@ export default function AdminPage() {
               {filter !== "all" && (
                 <button
                   onClick={() => setFilter("all")}
-                  className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1"
+                  className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1 cursor-pointer"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -643,186 +643,143 @@ export default function AdminPage() {
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full text-left border-collapse">
               <thead className="bg-muted">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Nome
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    CPF
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Contato
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Aluno NAD/SC
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Área
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Modalidade
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Workshop
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Temas Livres
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Status Pagamento
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Noite Solene
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Data
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Ações
-                  </th>
+                  <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Inscrito</th>
+                  <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Modalidade</th>
+                  <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Status Pagamento</th>
+                  <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider text-center">Noite Solene</th>
+                  <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider text-right">Ações</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
                 {filteredInscricoes.length === 0 ? (
                   <tr>
-                    <td colSpan={11} className="px-4 py-12 text-center text-muted-foreground">
+                    <td colSpan={5} className="px-4 py-12 text-center text-muted-foreground">
                       Nenhuma inscrição encontrada
                     </td>
                   </tr>
                 ) : (
-                  filteredInscricoes.map((inscricao) => (
-                    <tr key={inscricao.id} className="hover:bg-muted/50 transition-colors">
-                      <td className="px-4 py-4">
-                        <p className="font-medium text-foreground text-sm">{inscricao.nome_completo}</p>
-                      </td>
-                      <td className="px-4 py-4">
-                        <p className="text-sm text-muted-foreground">{formatCPF(inscricao.cpf)}</p>
-                      </td>
-                      <td className="px-4 py-4">
-                        <p className="text-sm text-foreground">{inscricao.email}</p>
-                        <p className="text-xs text-muted-foreground">{formatPhone(inscricao.telefone)}</p>
-                      </td>
-                      <td className="px-4 py-4">
-                        <p className="text-sm text-muted-foreground">
-                          {getTipoAlunoLabel(inscricao.tipo_aluno, inscricao.cidade_sao_camilo)}
-                        </p>
-                      </td>
-                      <td className="px-4 py-4">
-                        <p className="text-sm text-muted-foreground">
-                          {getAreaLabel(inscricao.area, inscricao.area_outro)}
-                        </p>
-                      </td>
-                      <td className="px-4 py-4">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          inscricao.modalidade === "estudante"
-                            ? "bg-blue-100 text-blue-800"
-                            : inscricao.modalidade === "profissional"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-purple-100 text-purple-800"
-                        }`}>
-                          {getModalidadeLabel(inscricao.modalidade)}
-                        </span>
-                        {inscricao.hospital_parceiro && (
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {inscricao.hospital_parceiro}
-                          </p>
-                        )}
-                      </td>
-                      <td className="px-4 py-4">
-                        {inscricao.escolha?.workshop ? (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                            {inscricao.escolha.workshop}
-                          </span>
-                        ) : (
-                          <span className="text-xs text-muted-foreground">-</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-4">
-                        {inscricao.escolha?.participa_temas_livres ? (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                            Sim
-                          </span>
-                        ) : (
-                          <span className="text-xs text-muted-foreground">Não</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-4">
-                        {editingInscricaoId === inscricao.id ? (
-                          <div className="flex gap-2">
-                            <input
-                              type="text"
-                              value={editingPaymentValue}
-                              onChange={(e) => setEditingPaymentValue(e.target.value)}
-                              className="flex-1 px-2 py-1 text-sm border border-border rounded bg-background"
-                              placeholder="Digite o status"
-                            />
-                            <button
-                              onClick={() => handleSavePaymentStatus(inscricao.id)}
-                              className="px-2 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700"
-                            >
-                              Salvar
-                            </button>
-                            <button
-                              onClick={() => setEditingInscricaoId(null)}
-                              className="px-2 py-1 text-xs bg-gray-300 text-gray-800 rounded hover:bg-gray-400"
-                            >
-                              Cancelar
-                            </button>
-                          </div>
-                        ) : (
-                          <div
-                            onClick={() => startEditingPaymentStatus(inscricao)}
-                            className="cursor-pointer p-2 rounded hover:bg-muted"
-                          >
-                            {inscricao.status_pagamento ? (
-                              <p className="text-sm text-foreground">{inscricao.status_pagamento}</p>
-                            ) : (
-                              <p className="text-sm text-muted-foreground italic">Clique para adicionar status</p>
+                  filteredInscricoes.map((inscrito) => (
+                    <React.Fragment key={inscrito.id}>
+                      <tr 
+                        onClick={() => setExpandedId(expandedId === inscrito.id ? null : inscrito.id)}
+                        className={`group cursor-pointer transition-colors hover:bg-muted/50 ${expandedId === inscrito.id ? 'bg-muted/30' : ''}`}
+                      >
+                        {/* Coluna Inscrito (Nome em destaque) */}
+                        <td className="px-4 py-4">
+                          <p className="font-bold text-primary text-sm leading-none">{inscrito.nome_completo}</p>
+                          <p className="text-xs text-muted-foreground mt-1.5 font-medium">{formatCPF(inscrito.cpf)}</p>
+                        </td>
+
+                        {/* Coluna Modalidade (Cores por categoria) */}
+                        <td className="px-4 py-4">
+                          <span className={`text-sm font-semibold ${
+                            inscrito.modalidade === 'profissional' ? 'bg-green-100 text-green-700' :
+                            inscrito.modalidade === 'estudante' ? 'bg-blue-100 text-blue-700' :
+                            'bg-purple-100 text-purple-700'
+                          }`}>
+                            {getModalidadeLabel(inscrito.modalidade)}
+                            {inscrito.modalidade === "parceiro" && inscrito.hospital_parceiro && (
+                              <span className="text-muted-foreground italic font-normal text-xs ml-1"> 
+                                — {inscrito.hospital_parceiro}
+                              </span>
                             )}
-                          </div>
-                        )}
-                      </td>
-                      <td className="px-4 py-4">
-                        <button
-                          onClick={() => handleToggleNoiteSolene(inscricao)}
-                          disabled={editingNoiteSoleneId === inscricao.id}
-                          className="cursor-pointer p-2 rounded hover:bg-muted transition-colors disabled:opacity-50"
-                          title="Clique para alterar"
-                        >
-                          {inscricao.participa_noite_solene ? (
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                              ✓ Sim
-                            </span>
+                          </span>
+                        </td>
+
+                        {/* Coluna Status Pagamento (Clique para editar + Botão Cancelar) */}
+                        <td className="px-4 py-4" onClick={(e) => e.stopPropagation()}>
+                          {editingInscricaoId === inscrito.id ? (
+                            <div className="flex items-center gap-1">
+                              <input
+                                autoFocus
+                                type="text"
+                                value={editingPaymentValue}
+                                onChange={(e) => setEditingPaymentValue(e.target.value)}
+                                className="w-32 px-2 py-1 text-sm border border-primary rounded bg-background outline-none"
+                              />
+                              <button onClick={() => handleSavePaymentStatus(inscrito.id)} className="p-1 text-green-600 hover:bg-green-50 rounded cursor-pointer" title="Salvar">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
+                              </button>
+                              <button onClick={() => setEditingInscricaoId(null)} className="p-1 text-destructive hover:bg-red-50 rounded cursor-pointer" title="Cancelar">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
+                              </button>
+                            </div>
                           ) : (
-                            <span className="text-xs text-muted-foreground">Não</span>
+                            <div 
+                              onClick={() => { setEditingInscricaoId(inscrito.id); setEditingPaymentValue(inscrito.status_pagamento || ""); }}
+                              className="inline-flex items-center gap-2 cursor-pointer hover:bg-muted px-2 py-1 -ml-2 rounded-md transition-colors group/edit"
+                            >
+                              <span className="text-sm text-foreground font-medium group-hover/edit:text-primary">
+                                {inscrito.status_pagamento || "Pendente"}
+                              </span>
+                              <svg className="w-3 h-3 text-muted-foreground opacity-0 group-hover/edit:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                              </svg>
+                            </div>
                           )}
-                        </button>
-                      </td>
-                      <td className="px-4 py-4">
-                        <p className="text-sm text-muted-foreground">
-                          {new Date(inscricao.created_at).toLocaleDateString("pt-BR")}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {new Date(inscricao.created_at).toLocaleTimeString("pt-BR", {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </p>
-                      </td>
-                      <td className="px-4 py-4">
-                        <button
-                          onClick={() => handleRemoveInscricao(inscricao.id)}
-                          className="text-destructive hover:text-destructive/80 transition-colors"
-                          title="Remover inscrição"
-                        >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
-                        </button>
-                      </td>
-                    </tr>
+                        </td>
+
+                        {/* Coluna Noite Solene */}
+                        <td className="px-4 py-4 text-center">
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); handleToggleNoiteSolene(inscrito); }}
+                            disabled={editingNoiteSoleneId === inscrito.id}
+                            className={`p-2 rounded-full transition-all cursor-pointer hover:bg-muted inline-flex items-center justify-center ${inscrito.participa_noite_solene ? 'text-green-600' : 'text-muted-foreground/30'}`}
+                          >
+                            {inscrito.participa_noite_solene ? (
+                              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
+                            ) : (
+                              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            )}
+                          </button>
+                        </td>
+
+                        {/* Coluna Ações (Excluir) */}
+                        <td className="px-4 py-4 text-right" onClick={(e) => e.stopPropagation()}>
+                          <button 
+                            onClick={() => handleRemoveInscricao(inscrito.id)}
+                            className="p-2 text-muted-foreground hover:text-destructive transition-colors cursor-pointer"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                          </button>
+                        </td>
+                      </tr>
+
+                      {/* Área Detalhada */}
+                      {expandedId === inscrito.id && (
+                      <tr className="bg-muted/20">
+                        <td colSpan={5} className="px-8 py-6 border-b border-border">
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div className="space-y-2">
+                              <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Contato</h4>
+                              <p className="text-sm text-foreground"><strong>E-mail:</strong> {inscrito.email}</p>
+                              <p className="text-sm text-foreground"><strong>Telefone:</strong> {formatPhone(inscrito.telefone)}</p>
+                              <p className="text-sm text-foreground"><strong>Inscrição:</strong> 
+                              {" " + new Date(inscrito.created_at).toLocaleDateString("pt-BR") + " "}
+                              {new Date(inscrito.created_at).toLocaleTimeString("pt-BR", {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
+                         </p>
+                            </div>
+                            <div className="space-y-2">
+                              <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Acadêmico</h4>
+                              <p className="text-sm text-foreground"><strong>Vínculo:</strong> {getTipoAlunoLabel(inscrito.tipo_aluno, inscrito.cidade_sao_camilo)}</p>
+                              <p className="text-sm text-foreground"><strong>Área:</strong> {getAreaLabel(inscrito.area, inscrito.area_outro)}</p>
+                            </div>
+                            <div className="space-y-2">
+                              <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Preferências</h4>
+                              <p className="text-sm text-foreground"><strong>Workshop:</strong> {inscrito.escolha?.workshop || "Nenhum"}</p>
+                              <p className="text-sm text-foreground"><strong>Temas Livres:</strong> {inscrito.escolha?.participa_temas_livres ? "Sim" : "Não"}</p>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                    </React.Fragment>
                   ))
                 )}
               </tbody>
