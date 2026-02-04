@@ -646,32 +646,6 @@ const [expandedId, setExpandedId] = useState<string | null>(null);
             </div>
           </div>
 
-          {/* Inscriptions Table */}
-<div className="bg-card rounded-xl shadow-lg border border-border overflow-hidden">
-  <div className="p-6 border-b border-border">
-    <div className="flex items-center justify-between flex-wrap gap-4">
-      <div>
-        <h2 className="text-xl font-semibold text-foreground">Lista de Inscritos</h2>
-        {filter !== "all" && (
-          <p className="text-sm text-muted-foreground mt-1">
-            Exibindo {filteredInscricoes.length} de {inscricoes.length} inscritos
-          </p>
-        )}
-      </div>
-      {filter !== "all" && (
-        <button
-          onClick={() => setFilter("all")}
-          className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
-          Limpar filtro
-        </button>
-      )}
-    </div>
-  </div>
-
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead className="bg-muted">
