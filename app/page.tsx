@@ -46,7 +46,7 @@ interface Stats {
 }
 
 const congressoNames: Record<Congresso, string> = {
-  uti: "III Congresso de UTI",
+  uti: "III Congresso de Unidade de Terapia Intensiva",
   utipedneo: "III Congresso de UTI Pediátrica e Neonatal",
 };
 
