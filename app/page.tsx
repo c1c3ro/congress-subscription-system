@@ -413,6 +413,8 @@ export default function AdminPage() {
   alert(`Link copiado: ${url}`); // Você pode substituir por um Toast se preferir
 };
 
+const [expandedId, setExpandedId] = useState<string | null>(null);
+
   // Dashboard do Congresso
   return (
     <div className="min-h-screen bg-gradient-to-br from-secondary/10 via-background to-muted">
