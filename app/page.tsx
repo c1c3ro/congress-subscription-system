@@ -407,6 +407,12 @@ export default function AdminPage() {
     return true;
   });
 
+  const copyToClipboard = (path: string) => {
+  const url = `${window.location.origin}${path}`;
+  navigator.clipboard.writeText(url);
+  alert(`Link copiado: ${url}`); // Você pode substituir por um Toast se preferir
+};
+
   // Dashboard do Congresso
   return (
     <div className="min-h-screen bg-gradient-to-br from-secondary/10 via-background to-muted">
@@ -431,6 +437,30 @@ export default function AdminPage() {
             </div>
           </div>
           <div className="flex items-center gap-3">
+            {/* Botão Copiar Inscrição */}
+            <Button
+              onClick={() => copyToClipboard(`/inscricao-${selectedCongresso}`)}
+              variant="outline"
+              className="flex items-center gap-2 bg-blue-50 hover:bg-blue-100 border-blue-200"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+              </svg>
+              Copiar Inscrição
+            </Button>
+
+            {/* Botão Copiar Confirmação */}
+            <Button
+              onClick={() => copyToClipboard(`/confirmacao-${selectedCongresso}`)}
+              variant="outline"
+              className="flex items-center gap-2 bg-green-50 hover:bg-green-100 border-green-200"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+              </svg>
+              Copiar Confirmação
+            </Button>
+
             <Button
               onClick={handleSwitchCongresso}
               variant="outline"
@@ -441,6 +471,7 @@ export default function AdminPage() {
               </svg>
               Ir para {congressoShortNames[selectedCongresso === "uti" ? "utipedneo" : "uti"]}
             </Button>
+
             <Button
               onClick={() => setSelectedCongresso(null)}
               variant="outline"
@@ -451,13 +482,14 @@ export default function AdminPage() {
               </svg>
               Menu
             </Button>
+
             <Button
               onClick={() => {
                 setIsAuthenticated(false);
                 setSelectedCongresso(null);
               }}
               variant="outline"
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 text-destructive hover:text-destructive"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
