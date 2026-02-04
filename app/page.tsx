@@ -758,10 +758,10 @@ export default function AdminPage() {
                               <p className="text-sm text-foreground"><strong>E-mail:</strong> {inscrito.email}</p>
                               <p className="text-sm text-foreground"><strong>Telefone:</strong> {formatPhone(inscrito.telefone)}</p>
                               <p className="text-sm text-foreground"><strong>Inscrição:</strong> <p className="text-sm text-muted-foreground">
-                          {new Date(inscricao.created_at).toLocaleDateString("pt-BR")}
+                          {new Date(inscrito.created_at).toLocaleDateString("pt-BR")}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          {new Date(inscricao.created_at).toLocaleTimeString("pt-BR", {
+                          {new Date(inscrito.created_at).toLocaleTimeString("pt-BR", {
                             hour: "2-digit",
                             minute: "2-digit",
                           })}
