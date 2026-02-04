@@ -3,10 +3,13 @@ import { NextResponse } from "next/server";
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  // 1. Atualize a tipagem aqui para indicar que params é uma Promise
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    // 2. Adicione o 'await' antes de ler o params
+    const { id } = await params;
+    
     const data = await request.json();
     
     // Usar cliente admin para bypass RLS em operações administrativas
@@ -24,7 +27,7 @@ export async function PATCH(
     const { data: result, error } = await supabase
       .from("inscricoes")
       .update(updateData)
-      .eq("id", id)
+      .eq("id", id) // Agora 'id' terá o valor correto (UUID)
       .select();
 
     if (error) {
