@@ -115,7 +115,13 @@ export default function AdminPage() {
 
       setInscricoes(inscricaoData.inscricoes || []);
       setWorkshops(inscricaoData.workshops || []);
-      setTemasLivresTotal(inscricaoData.temasLivres?.total || 0);
+
+      const qtdTemasLivres = (inscricaoData.inscricoes || []).filter(
+        (inscrito: Inscricao) => inscrito.escolha?.participa_temas_livres === true
+      ).length;
+      
+      setTemasLivresTotal(qtdTemasLivres);
+      
       setNoiteSoleneCounter(soleneData);
       setStats(inscricaoData.stats || {
         total: 0,
