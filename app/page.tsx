@@ -436,7 +436,7 @@ export default function AdminPage() {
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex w-full items-center gap-3">
             {/* Botão Copiar Inscrição */}
             <Button
               onClick={() => copyToClipboard(`/inscricao-${selectedCongresso}`)}
