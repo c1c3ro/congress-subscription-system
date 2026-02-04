@@ -663,17 +663,23 @@ export default function AdminPage() {
                 ) : (
                   filteredInscricoes.map((inscrito) => (
                     <React.Fragment key={inscrito.id}>
-                      {/* Linha Principal */}
                       <tr 
                         onClick={() => setExpandedId(expandedId === inscrito.id ? null : inscrito.id)}
                         className={`group cursor-pointer transition-colors hover:bg-muted/50 ${expandedId === inscrito.id ? 'bg-muted/30' : ''}`}
                       >
+                        {/* Coluna Inscrito (Nome em destaque) */}
                         <td className="px-4 py-4">
                           <p className="font-bold text-primary text-sm leading-none">{inscrito.nome_completo}</p>
                           <p className="text-xs text-muted-foreground mt-1.5 font-medium">{formatCPF(inscrito.cpf)}</p>
                         </td>
+
+                        {/* Coluna Modalidade (Cores por categoria) */}
                         <td className="px-4 py-4">
-                          <span className="text-sm font-semibold text-indigo-600 dark:text-indigo-400">
+                          <span className={`text-sm font-semibold ${
+                            inscrito.modalidade === 'profissional' ? 'text-emerald-600 dark:text-emerald-400' :
+                            inscrito.modalidade === 'estudante' ? 'text-sky-600 dark:text-sky-400' :
+                            'text-indigo-600 dark:text-indigo-400'
+                          }`}>
                             {getModalidadeLabel(inscrito.modalidade)}
                             {inscrito.modalidade === "parceiro" && inscrito.hospital_parceiro && (
                               <span className="text-muted-foreground italic font-normal text-xs ml-1"> 
@@ -682,22 +688,23 @@ export default function AdminPage() {
                             )}
                           </span>
                         </td>
+
+                        {/* Coluna Status Pagamento (Clique para editar + Botão Cancelar) */}
                         <td className="px-4 py-4" onClick={(e) => e.stopPropagation()}>
                           {editingInscricaoId === inscrito.id ? (
-                            <div className="flex gap-2">
+                            <div className="flex items-center gap-1">
                               <input
                                 autoFocus
                                 type="text"
                                 value={editingPaymentValue}
                                 onChange={(e) => setEditingPaymentValue(e.target.value)}
-                                className="w-32 px-2 py-1 text-sm border border-primary rounded bg-background ring-2 ring-primary/20 outline-none"
+                                className="w-32 px-2 py-1 text-sm border border-primary rounded bg-background outline-none"
                               />
-                              <button 
-                                onClick={() => handleSavePaymentStatus(inscrito.id)} 
-                                className="p-1 text-green-600 hover:bg-green-50 rounded cursor-pointer"
-                                title="Salvar"
-                              >
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
+                              <button onClick={() => handleSavePaymentStatus(inscrito.id)} className="p-1 text-green-600 hover:bg-green-50 rounded cursor-pointer" title="Salvar">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
+                              </button>
+                              <button onClick={() => setEditingInscricaoId(null)} className="p-1 text-destructive hover:bg-red-50 rounded cursor-pointer" title="Cancelar">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
                               </button>
                             </div>
                           ) : (
@@ -714,6 +721,8 @@ export default function AdminPage() {
                             </div>
                           )}
                         </td>
+
+                        {/* Coluna Noite Solene */}
                         <td className="px-4 py-4 text-center">
                           <button 
                             onClick={(e) => { e.stopPropagation(); handleToggleNoiteSolene(inscrito); }}
@@ -727,6 +736,8 @@ export default function AdminPage() {
                             )}
                           </button>
                         </td>
+
+                        {/* Coluna Ações (Excluir) */}
                         <td className="px-4 py-4 text-right" onClick={(e) => e.stopPropagation()}>
                           <button 
                             onClick={() => handleRemoveInscricao(inscrito.id)}
@@ -746,7 +757,6 @@ export default function AdminPage() {
                                 <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Contato</h4>
                                 <p className="text-sm text-foreground"><strong>E-mail:</strong> {inscrito.email}</p>
                                 <p className="text-sm text-foreground"><strong>Telefone:</strong> {formatPhone(inscrito.telefone)}</p>
-                                <p className="text-sm text-foreground"><strong>Inscrição:</strong> {new Date(inscrito.created_at).toLocaleDateString('pt-BR')}</p>
                               </div>
                               <div className="space-y-2">
                                 <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Acadêmico</h4>
