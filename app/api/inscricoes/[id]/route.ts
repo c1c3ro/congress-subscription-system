@@ -1,7 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { NextResponse } from "next/server";
 
-// --- FUNÇÃO PATCH (Mantida exatamente como você tinha, com logs) ---
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -40,62 +39,64 @@ export async function PATCH(
   }
 }
 
-// --- FUNÇÃO DELETE CORRIGIDA E VERBOSA ---
 export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const debug = [];
   try {
     const { id } = await params;
     const supabase = createAdminClient();
-    debug.push(`Tentando excluir ID: ${id}`);
 
-    // 1. Verificar status antes de deletar
-    const { data: inscrito, error: fErr } = await supabase
+    // 1. Buscar dados do inscrito
+    const { data: inscrito, error: fetchError } = await supabase
       .from("inscricoes")
-      .select("nome_completo, participa_noite_solene")
+      .select("participa_noite_solene")
       .eq("id", id)
       .single();
 
-    if (fErr || !inscrito) {
-      return NextResponse.json({ error: "Inscrito não encontrado", debug }, { status: 404 });
+    if (fetchError || !inscrito) {
+      return NextResponse.json({ error: "Inscrito não encontrado no banco" }, { status: 404 });
     }
 
-    debug.push(`Inscrito: ${inscrito.nome_completo}, Noite Solene: ${inscrito.participa_noite_solene}`);
-
-    // 2. Decrementar contador se ele participava (comparação explícita com true)
+    // 2. Se participava, decrementa ANTES de deletar
     if (inscrito.participa_noite_solene === true) {
-      const { data: counters } = await supabase.from("noite_solene_counter").select("*");
-      
-      if (counters && counters.length > 0) {
-        const counter = counters[0];
-        const novoTotal = Math.max(0, (counter.total_confirmados || 0) - 1);
-        
-        const { error: uErr } = await supabase
-          .from("noite_solene_counter")
-          .update({ total_confirmados: novoTotal })
-          .eq("id", counter.id);
+      const { data: counters, error: cFetchError } = await supabase
+        .from("noite_solene_counter")
+        .select("*")
+        .limit(1);
 
-        if (uErr) debug.push(`Erro ao atualizar contador: ${uErr.message}`);
-        else debug.push(`Contador decrementado de ${counter.total_confirmados} para ${novoTotal}`);
-      } else {
-        debug.push("Aviso: Registro de contador não encontrado na tabela");
+      if (cFetchError || !counters || counters.length === 0) {
+        return NextResponse.json({ error: "Erro ao localizar tabela de contador" }, { status: 500 });
+      }
+
+      const counter = counters[0];
+      const novoTotal = Math.max(0, (counter.total_confirmados || 0) - 1);
+
+      const { error: updError } = await supabase
+        .from("noite_solene_counter")
+        .update({ total_confirmados: novoTotal })
+        .eq("id", counter.id);
+
+      if (updError) {
+        return NextResponse.json({ error: "Falha ao decrementar contador", details: updError }, { status: 500 });
       }
     }
 
-    // 3. Deletar inscrito
-    const { error: dErr } = await supabase.from("inscricoes").delete().eq("id", id);
-    if (dErr) throw dErr;
+    // 3. Só deleta se o passo anterior deu certo (ou se não precisava decrementar)
+    const { error: deleteError } = await supabase
+      .from("inscricoes")
+      .delete()
+      .eq("id", id);
 
-    // Retorna explicitamente o status para você ver no Network
+    if (deleteError) throw deleteError;
+
     return NextResponse.json({ 
       success: true, 
-      message: "Excluído e contador ajustado",
-      debug_info: debug 
+      info: "Inscrito removido e contador atualizado com sucesso" 
     });
 
   } catch (error: any) {
-    return NextResponse.json({ error: error.message, debug }, { status: 500 });
+    console.error("Erro na API DELETE:", error);
+    return NextResponse.json({ error: "Erro interno", details: error.message }, { status: 500 });
   }
 }
