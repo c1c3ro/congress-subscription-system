@@ -648,6 +648,7 @@ export default function AdminPage() {
                 <tr>
                   <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Inscrito</th>
                   <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Modalidade</th>
+                  <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider text-center">Confirmação</th>
                   <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Status Pagamento</th>
                   <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider text-center">Noite Solene</th>
                   <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider text-right">Ações</th>
@@ -656,7 +657,7 @@ export default function AdminPage() {
               <tbody className="divide-y divide-border">
                 {filteredInscricoes.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="px-4 py-12 text-center text-muted-foreground">
+                    <td colSpan={6} className="px-4 py-12 text-center text-muted-foreground">
                       Nenhuma inscrição encontrada
                     </td>
                   </tr>
@@ -667,18 +668,18 @@ export default function AdminPage() {
                         onClick={() => setExpandedId(expandedId === inscrito.id ? null : inscrito.id)}
                         className={`group cursor-pointer transition-colors hover:bg-muted/50 ${expandedId === inscrito.id ? 'bg-muted/30' : ''}`}
                       >
-                        {/* Coluna Inscrito (Nome em destaque) */}
+                        {/* Inscrito */}
                         <td className="px-4 py-4">
                           <p className="font-bold text-primary text-sm leading-none">{inscrito.nome_completo}</p>
                           <p className="text-xs text-muted-foreground mt-1.5 font-medium">{formatCPF(inscrito.cpf)}</p>
                         </td>
 
-                        {/* Coluna Modalidade (Cores por categoria) */}
+                        {/* Modalidade */}
                         <td className="px-4 py-4">
                           <span className={`text-sm font-semibold ${
-                            inscrito.modalidade === 'profissional' ? 'bg-green-100 text-green-700' :
-                            inscrito.modalidade === 'estudante' ? 'bg-blue-100 text-blue-700' :
-                            'bg-purple-100 text-purple-700'
+                            inscrito.modalidade === 'profissional' ? 'text-emerald-600 dark:text-emerald-400' :
+                            inscrito.modalidade === 'estudante' ? 'text-sky-600 dark:text-sky-400' :
+                            'text-indigo-600 dark:text-indigo-400'
                           }`}>
                             {getModalidadeLabel(inscrito.modalidade)}
                             {inscrito.modalidade === "parceiro" && inscrito.hospital_parceiro && (
@@ -689,7 +690,14 @@ export default function AdminPage() {
                           </span>
                         </td>
 
-                        {/* Coluna Status Pagamento (Clique para editar + Botão Cancelar) */}
+                        {/* Nova Coluna: Confirmação */}
+                        <td className="px-4 py-4 text-center">
+                          <span className={`text-sm font-bold ${inscrito.escolha?.workshop ? 'text-green-600' : 'text-red-500'}`}>
+                            {inscrito.escolha?.workshop ? 'Sim' : 'Não'}
+                          </span>
+                        </td>
+
+                        {/* Status Pagamento */}
                         <td className="px-4 py-4" onClick={(e) => e.stopPropagation()}>
                           {editingInscricaoId === inscrito.id ? (
                             <div className="flex items-center gap-1">
@@ -700,10 +708,10 @@ export default function AdminPage() {
                                 onChange={(e) => setEditingPaymentValue(e.target.value)}
                                 className="w-32 px-2 py-1 text-sm border border-primary rounded bg-background outline-none"
                               />
-                              <button onClick={() => handleSavePaymentStatus(inscrito.id)} className="p-1 text-green-600 hover:bg-green-50 rounded cursor-pointer" title="Salvar">
+                              <button onClick={() => handleSavePaymentStatus(inscrito.id)} className="p-1 text-green-600 hover:bg-green-50 rounded cursor-pointer">
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
                               </button>
-                              <button onClick={() => setEditingInscricaoId(null)} className="p-1 text-destructive hover:bg-red-50 rounded cursor-pointer" title="Cancelar">
+                              <button onClick={() => setEditingInscricaoId(null)} className="p-1 text-destructive hover:bg-red-50 rounded cursor-pointer">
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
                               </button>
                             </div>
@@ -722,7 +730,7 @@ export default function AdminPage() {
                           )}
                         </td>
 
-                        {/* Coluna Noite Solene */}
+                        {/* Noite Solene */}
                         <td className="px-4 py-4 text-center">
                           <button 
                             onClick={(e) => { e.stopPropagation(); handleToggleNoiteSolene(inscrito); }}
@@ -737,7 +745,7 @@ export default function AdminPage() {
                           </button>
                         </td>
 
-                        {/* Coluna Ações (Excluir) */}
+                        {/* Ações */}
                         <td className="px-4 py-4 text-right" onClick={(e) => e.stopPropagation()}>
                           <button 
                             onClick={() => handleRemoveInscricao(inscrito.id)}
@@ -750,35 +758,28 @@ export default function AdminPage() {
 
                       {/* Área Detalhada */}
                       {expandedId === inscrito.id && (
-                      <tr className="bg-muted/20">
-                        <td colSpan={5} className="px-8 py-6 border-b border-border">
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <div className="space-y-2">
-                              <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Contato</h4>
-                              <p className="text-sm text-foreground"><strong>E-mail:</strong> {inscrito.email}</p>
-                              <p className="text-sm text-foreground"><strong>Telefone:</strong> {formatPhone(inscrito.telefone)}</p>
-                              <p className="text-sm text-foreground"><strong>Inscrição:</strong> 
-                              {" " + new Date(inscrito.created_at).toLocaleDateString("pt-BR") + " "}
-                              {new Date(inscrito.created_at).toLocaleTimeString("pt-BR", {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              })}
-                         </p>
+                        <tr className="bg-muted/20">
+                          <td colSpan={6} className="px-8 py-6 border-b border-border">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                              <div className="space-y-2">
+                                <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Contato</h4>
+                                <p className="text-sm text-foreground"><strong>E-mail:</strong> {inscrito.email}</p>
+                                <p className="text-sm text-foreground"><strong>Telefone:</strong> {formatPhone(inscrito.telefone)}</p>
+                              </div>
+                              <div className="space-y-2">
+                                <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Acadêmico</h4>
+                                <p className="text-sm text-foreground"><strong>Vínculo:</strong> {getTipoAlunoLabel(inscrito.tipo_aluno, inscrito.cidade_sao_camilo)}</p>
+                                <p className="text-sm text-foreground"><strong>Área:</strong> {getAreaLabel(inscrito.area, inscrito.area_outro)}</p>
+                              </div>
+                              <div className="space-y-2">
+                                <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Preferências</h4>
+                                <p className="text-sm text-foreground"><strong>Workshop:</strong> {inscrito.escolha?.workshop || "Nenhum"}</p>
+                                <p className="text-sm text-foreground"><strong>Temas Livres:</strong> {inscrito.escolha?.participa_temas_livres ? "Sim" : "Não"}</p>
+                              </div>
                             </div>
-                            <div className="space-y-2">
-                              <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Acadêmico</h4>
-                              <p className="text-sm text-foreground"><strong>Vínculo:</strong> {getTipoAlunoLabel(inscrito.tipo_aluno, inscrito.cidade_sao_camilo)}</p>
-                              <p className="text-sm text-foreground"><strong>Área:</strong> {getAreaLabel(inscrito.area, inscrito.area_outro)}</p>
-                            </div>
-                            <div className="space-y-2">
-                              <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Preferências</h4>
-                              <p className="text-sm text-foreground"><strong>Workshop:</strong> {inscrito.escolha?.workshop || "Nenhum"}</p>
-                              <p className="text-sm text-foreground"><strong>Temas Livres:</strong> {inscrito.escolha?.participa_temas_livres ? "Sim" : "Não"}</p>
-                            </div>
-                          </div>
-                        </td>
-                      </tr>
-                    )}
+                          </td>
+                        </tr>
+                      )}
                     </React.Fragment>
                   ))
                 )}
