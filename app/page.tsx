@@ -148,23 +148,26 @@ export default function AdminPage() {
   };
 
   const handleRemoveInscricao = async (id: string) => {
-    if (!confirm("Tem certeza que deseja remover esta inscrição?")) return;
+    if (!confirm("Tem certeza que deseja excluir esta inscrição?")) return;
 
     try {
-      const response = await fetch(`/api/inscricoes?id=${id}`, {
+      // CORREÇÃO: Chama a rota específica com o método DELETE
+      const response = await fetch(`/api/inscricoes/${id}`, {
         method: "DELETE",
-      })
+      });
 
-      if (response.ok && selectedCongresso) {
-        await loadData(selectedCongresso);
-      } else {
-        alert("Erro ao remover inscrição");
-      }
+      if (!response.ok) throw new Error("Erro ao excluir");
+
+      const result = await response.json();
+      console.log("Resultado da exclusão:", result);
+
+      setInscricoes(inscricoes.filter((i) => i.id !== id));
+      alert("Inscrito removido com sucesso!");
     } catch (error) {
-      console.error("Error removing inscription:", error);
-      alert("Erro ao remover inscrição");
+      console.error("Erro:", error);
+      alert("Não foi possível excluir o inscrito.");
     }
-  }
+  };
 
   const handleSavePaymentStatus = async (id: string) => {
     try {
