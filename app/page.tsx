@@ -42,7 +42,6 @@ interface Stats {
   profissionais: number;
   parceiros: number;
   alunosNAD: number;
-  alunosSaoCamilo: number;
 }
 
 const congressoNames: Record<Congresso, string> = {
@@ -69,7 +68,6 @@ export default function AdminPage() {
     profissionais: 0,
     parceiros: 0,
     alunosNAD: 0,
-    alunosSaoCamilo: 0,
   });
   const [isLoading, setIsLoading] = useState(false);
   const [filter, setFilter] = useState<string>("all");
@@ -129,7 +127,6 @@ export default function AdminPage() {
         profissionais: 0,
         parceiros: 0,
         alunosNAD: 0,
-        alunosSaoCamilo: 0,
       });
     } catch (error) {
       console.error("Error loading data:", error)
@@ -263,10 +260,9 @@ export default function AdminPage() {
     return modalidades[modalidade] || modalidade;
   };
 
-  const getTipoAlunoLabel = (tipo: string, cidade: string | null) => {
+  const getTipoAlunoLabel = (tipo: string) => {
     if (tipo === "nao") return "Não";
-    if (tipo === "nad") return "NAD";
-    if (tipo === "sao_camilo") return `São Camilo${cidade ? ` - ${cidade}` : ""}`;
+    if (tipo === "nad") return "Sim (NAD)";
     return tipo;
   };
 
@@ -505,7 +501,7 @@ export default function AdminPage() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
           <button
             onClick={() => setFilter("all")}
             className={`bg-card rounded-xl p-4 border transition-all text-left ${
@@ -559,10 +555,6 @@ export default function AdminPage() {
             <p className="text-xs text-muted-foreground">Alunos NAD</p>
           </div>
 
-          <div className="bg-card rounded-xl p-4 border border-border">
-            <p className="text-2xl font-bold text-foreground">{stats.alunosSaoCamilo}</p>
-            <p className="text-xs text-muted-foreground">Alunos São Camilo</p>
-          </div>
         </div>
 
         {/* Workshops e Temas Livres Stats */}
@@ -771,7 +763,7 @@ export default function AdminPage() {
                               </div>
                               <div className="space-y-2">
                                 <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Acadêmico</h4>
-                                <p className="text-sm text-foreground"><strong>Vínculo:</strong> {getTipoAlunoLabel(inscrito.tipo_aluno, inscrito.cidade_sao_camilo)}</p>
+                                <p className="text-sm text-foreground"><strong>Aluno NAD:</strong> {getTipoAlunoLabel(inscrito.tipo_aluno)}</p>
                                 <p className="text-sm text-foreground"><strong>Área:</strong> {getAreaLabel(inscrito.area, inscrito.area_outro)}</p>
                               </div>
                               <div className="space-y-2">
