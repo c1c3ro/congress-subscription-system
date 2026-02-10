@@ -23,7 +23,6 @@ export function InscriptionForm({ congresso, congressoNome }: InscriptionFormPro
     email: "",
     telefone: "",
     tipo_aluno: "",
-    cidade_sao_camilo: "",
     area: "",
     area_outro: "",
     modalidade: "",
@@ -82,6 +81,7 @@ export function InscriptionForm({ congresso, congressoNome }: InscriptionFormPro
           ...formData,
           cpf: formData.cpf.replace(/\D/g, ""),
           telefone: formData.telefone.replace(/\D/g, ""),
+          cidade_sao_camilo: null,
         }),
       });
 
@@ -197,46 +197,35 @@ export function InscriptionForm({ congresso, congressoNome }: InscriptionFormPro
       {/* Tipo de Aluno */}
       <div>
         <label className="block text-sm font-medium text-foreground mb-3">
-          Você é aluno NAD/São Camilo? *
+          Você é aluno NAD? *
         </label>
-        <div className="space-y-2">
-          {[
-            { value: "nao", label: "Não" },
-            { value: "nad", label: "Sim, sou aluno NAD" },
-            { value: "sao_camilo", label: "Sim, sou aluno São Camilo" },
-          ].map((option) => (
-            <label key={option.value} className="flex items-center gap-3 cursor-pointer">
-              <input
-                type="radio"
-                name="tipo_aluno"
-                value={option.value}
-                checked={formData.tipo_aluno === option.value}
-                onChange={handleChange}
-                className="w-4 h-4 text-primary focus:ring-primary/20"
-                required
-              />
-              <span className="text-foreground">{option.label}</span>
-            </label>
-          ))}
-        </div>
-        
-        {formData.tipo_aluno === "sao_camilo" && (
-          <div className="mt-4 pl-7">
-            <label htmlFor="cidade_sao_camilo" className="block text-sm font-medium text-foreground mb-2">
-              Você é aluno da São Camilo de qual cidade? *
-            </label>
+        <div className="flex gap-6">
+          <label className="flex items-center gap-3 cursor-pointer">
             <input
-              type="text"
-              id="cidade_sao_camilo"
-              name="cidade_sao_camilo"
-              value={formData.cidade_sao_camilo}
+              type="radio"
+              name="tipo_aluno"
+              value="nad" // Mantivemos 'nad' para representar SIM
+              checked={formData.tipo_aluno === "nad"}
               onChange={handleChange}
-              className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-              placeholder="Digite a cidade"
+              className="w-4 h-4 text-primary focus:ring-primary/20"
               required
             />
-          </div>
-        )}
+            <span className="text-foreground">Sim</span>
+          </label>
+
+          <label className="flex items-center gap-3 cursor-pointer">
+            <input
+              type="radio"
+              name="tipo_aluno"
+              value="nao"
+              checked={formData.tipo_aluno === "nao"}
+              onChange={handleChange}
+              className="w-4 h-4 text-primary focus:ring-primary/20"
+              required
+            />
+            <span className="text-foreground">Não</span>
+          </label>
+        </div>
       </div>
 
       {/* Área */}
