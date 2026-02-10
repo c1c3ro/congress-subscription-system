@@ -262,7 +262,7 @@ export default function AdminPage() {
 
   const getTipoAlunoLabel = (tipo: string) => {
     if (tipo === "nao") return "Não";
-    if (tipo === "nad") return "Sim (NAD)";
+    if (tipo === "nad") return "Sim";
     return tipo;
   };
 
