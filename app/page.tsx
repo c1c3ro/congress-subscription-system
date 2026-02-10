@@ -405,6 +405,7 @@ export default function AdminPage() {
     if (filter === "estudante") return inscricao.modalidade === "estudante";
     if (filter === "profissional") return inscricao.modalidade === "profissional";
     if (filter === "parceiro") return inscricao.modalidade === "parceiro";
+    if (filter === "nad") return inscricao.tipo_aluno === "nad";
     return true;
   });
 
@@ -550,10 +551,17 @@ export default function AdminPage() {
             <p className="text-xs text-muted-foreground">Parceiros</p>
           </button>
 
-          <div className="bg-card rounded-xl p-4 border border-border">
+          <button
+            onClick={() => setFilter("nad")}
+            className={`bg-card rounded-xl p-4 border transition-all text-left ${
+              filter === "nad"
+                ? "border-primary ring-2 ring-primary/20"
+                : "border-border hover:border-primary/50"
+            }`}
+          >
             <p className="text-2xl font-bold text-foreground">{stats.alunosNAD}</p>
             <p className="text-xs text-muted-foreground">Alunos NAD</p>
-          </div>
+          </button>
 
         </div>
 
