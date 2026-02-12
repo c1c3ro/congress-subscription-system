@@ -68,9 +68,17 @@ export async function GET(request: Request) {
     );
   }
 
+  // Filtrar workshops conforme pagamento adicional
+  let workshopsFiltrados = workshops;
+  if (!inscrito.pagamento_adicional) {
+    // Se não pagou adicional, mostra apenas workshops não-premium
+    workshopsFiltrados = workshops.filter((w) => !w.eh_premium);
+  }
+  // Se pagou adicional, mostra todos os workshops
+
   // Contar vagas ocupadas por workshop
   const workshopsComVagas = await Promise.all(
-    workshops.map(async (workshop) => {
+    workshopsFiltrados.map(async (workshop) => {
       const { count } = await supabase
         .from("escolhas_inscrito")
         .select("*", { count: "exact", head: true })
@@ -84,30 +92,9 @@ export async function GET(request: Request) {
     })
   );
 
-  // Buscar vagas de Temas Livres
-  const { data: temasLivres } = await supabase
-    .from("temas_livres")
-    .select("*")
-    .eq("congresso", inscrito.congresso)
-    .single();
-
-  // Contar participantes de Temas Livres
-  const { data: inscritosDoCongressoComEscolha } = await supabase
-    .from("escolhas_inscrito")
-    .select("inscrito_id, participa_temas_livres, inscricoes!inner(congresso)")
-    .eq("participa_temas_livres", true)
-    .eq("inscricoes.congresso", inscrito.congresso);
-
-  const temasLivresOcupadas = inscritosDoCongressoComEscolha?.length || 0;
-
   return NextResponse.json({
     inscrito,
     workshops: workshopsComVagas,
-    temasLivres: {
-      ...temasLivres,
-      vagas_ocupadas: temasLivresOcupadas,
-      vagas_disponiveis: (temasLivres?.vagas_total || 3) - temasLivresOcupadas,
-    },
     jaEscolheu: false,
   });
 }
@@ -115,7 +102,7 @@ export async function GET(request: Request) {
 // POST - Salvar escolhas do inscrito
 export async function POST(request: Request) {
   const body = await request.json();
-  const { inscrito_id, workshop_id, participa_temas_livres } = body;
+  const { inscrito_id, workshop_id } = body;
 
   if (!inscrito_id) {
     return NextResponse.json(
@@ -169,6 +156,14 @@ export async function POST(request: Request) {
       );
     }
 
+    // Validar se o inscrito tem permissão para escolher workshops premium
+    if (workshop.eh_premium && !inscrito.pagamento_adicional) {
+      return NextResponse.json(
+        { error: "Você não tem permissão para escolher este workshop. Efetue o pagamento adicional." },
+        { status: 403 }
+      );
+    }
+
     const { count: vagasOcupadas } = await supabase
       .from("escolhas_inscrito")
       .select("*", { count: "exact", head: true })
@@ -182,37 +177,12 @@ export async function POST(request: Request) {
     }
   }
 
-  // Validar vagas de Temas Livres se selecionado
-  if (participa_temas_livres) {
-    const { data: temasLivres } = await supabase
-      .from("temas_livres")
-      .select("*")
-      .eq("congresso", inscrito.congresso)
-      .single();
-
-    const { data: participantesTemasLivres } = await supabase
-      .from("escolhas_inscrito")
-      .select("inscrito_id, participa_temas_livres, inscricoes!inner(congresso)")
-      .eq("participa_temas_livres", true)
-      .eq("inscricoes.congresso", inscrito.congresso);
-
-    const vagasOcupadasTL = participantesTemasLivres?.length || 0;
-
-    if (vagasOcupadasTL >= (temasLivres?.vagas_total || 3)) {
-      return NextResponse.json(
-        { error: "Não há mais vagas disponíveis para Temas Livres" },
-        { status: 400 }
-      );
-    }
-  }
-
   // Inserir escolha
   const { data: novaEscolha, error } = await supabase
     .from("escolhas_inscrito")
     .insert({
       inscrito_id,
       workshop_id: workshop_id || null,
-      participa_temas_livres: participa_temas_livres || false,
     })
     .select("*, workshops(*)")
     .single();

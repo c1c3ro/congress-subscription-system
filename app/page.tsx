@@ -21,11 +21,11 @@ interface Inscricao {
   modalidade: string;
   hospital_parceiro: string | null;
   status_pagamento: string | null;
+  pagamento_adicional: boolean;
   participa_noite_solene: boolean;
   created_at: string;
   escolha: {
     workshop: string | null;
-    participa_temas_livres: boolean;
   } | null;
 }
 
@@ -61,7 +61,6 @@ export default function AdminPage() {
   const [error, setError] = useState("");
   const [inscricoes, setInscricoes] = useState<Inscricao[]>([]);
   const [workshops, setWorkshops] = useState<Workshop[]>([]);
-  const [temasLivresTotal, setTemasLivresTotal] = useState(0);
   const [stats, setStats] = useState<Stats>({
     total: 0,
     estudantes: 0,
@@ -75,6 +74,7 @@ export default function AdminPage() {
   const [editingInscricaoId, setEditingInscricaoId] = useState<string | null>(null);
   const [editingPaymentValue, setEditingPaymentValue] = useState<string>("");
   const [editingNoiteSoleneId, setEditingNoiteSoleneId] = useState<string | null>(null);
+  const [editingPagamentoAdicionalId, setEditingPagamentoAdicionalId] = useState<string | null>(null);
   const [noiteSoleneCounter, setNoiteSoleneCounter] = useState({ total_confirmados: 0, limite_vagas: 150 });
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -113,13 +113,6 @@ export default function AdminPage() {
 
       setInscricoes(inscricaoData.inscricoes || []);
       setWorkshops(inscricaoData.workshops || []);
-
-      const qtdTemasLivres = (inscricaoData.inscricoes || []).filter(
-        (inscrito: Inscricao) => inscrito.escolha?.participa_temas_livres === true
-      ).length;
-      
-      setTemasLivresTotal(qtdTemasLivres);
-      
       setNoiteSoleneCounter(soleneData);
       setStats(inscricaoData.stats || {
         total: 0,
@@ -229,6 +222,39 @@ export default function AdminPage() {
       alert("Erro ao atualizar Noite Solene: " + String(error));
     } finally {
       setEditingNoiteSoleneId(null);
+    }
+  }
+
+  const handleTogglePagamentoAdicional = async (inscricao: Inscricao) => {
+    if (editingPagamentoAdicionalId === inscricao.id) return;
+    
+    setEditingPagamentoAdicionalId(inscricao.id);
+    
+    try {
+      const novoValor = !inscricao.pagamento_adicional;
+      console.log("[v0] Alterando Pagamento Adicional:", { id: inscricao.id, novoValor });
+      
+      const response = await fetch(`/api/inscricoes/${inscricao.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pagamento_adicional: novoValor }),
+      });
+
+      const responseData = await response.json();
+      console.log("[v0] Resposta do servidor:", { status: response.status, data: responseData });
+
+      if (response.ok && selectedCongresso) {
+        console.log("[v0] Atualização bem-sucedida, recarregando dados");
+        await loadData(selectedCongresso);
+      } else {
+        console.error("[v0] Erro na resposta:", responseData);
+        alert("Erro ao atualizar Pagamento Adicional: " + (responseData.error || "desconhecido"));
+      }
+    } catch (error) {
+      console.error("[v0] Erro na requisição:", error);
+      alert("Erro ao atualizar Pagamento Adicional: " + String(error));
+    } finally {
+      setEditingPagamentoAdicionalId(null);
     }
   }
 
@@ -565,32 +591,21 @@ export default function AdminPage() {
 
         </div>
 
-        {/* Workshops e Temas Livres Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-          <div className="bg-card rounded-xl p-4 border border-border">
-            <h3 className="text-sm font-semibold text-foreground mb-3">Workshops</h3>
-            <div className="space-y-2">
-              {workshops.map((workshop) => (
-                <div key={workshop.id} className="flex justify-between items-center text-sm">
-                  <span className="text-muted-foreground truncate mr-2">{workshop.titulo}</span>
-                  <span className="font-medium text-foreground whitespace-nowrap">
-                    {workshop.vagas_ocupadas}/{workshop.vagas_total}
-                  </span>
-                </div>
-              ))}
-              {workshops.length === 0 && (
-                <p className="text-sm text-muted-foreground">Nenhum workshop cadastrado</p>
-              )}
-            </div>
-          </div>
-          <div className="bg-card rounded-xl p-4 border border-border">
-            <h3 className="text-sm font-semibold text-foreground mb-3">Temas Livres</h3>
-            <div className="flex items-center gap-4">
-              <div className="flex-1">
-                <p className="text-2xl font-bold text-foreground">{temasLivresTotal}</p>
-                <p className="text-xs text-muted-foreground">Participantes</p>
+        {/* Workshops Stats */}
+        <div className="bg-card rounded-xl p-4 border border-border mb-8">
+          <h3 className="text-sm font-semibold text-foreground mb-3">Workshops</h3>
+          <div className="space-y-2">
+            {workshops.map((workshop) => (
+              <div key={workshop.id} className="flex justify-between items-center text-sm">
+                <span className="text-muted-foreground truncate mr-2">{workshop.titulo}</span>
+                <span className="font-medium text-foreground whitespace-nowrap">
+                  {workshop.vagas_ocupadas}/{workshop.vagas_total}
+                </span>
               </div>
-            </div>
+            ))}
+            {workshops.length === 0 && (
+              <p className="text-sm text-muted-foreground">Nenhum workshop cadastrado</p>
+            )}
           </div>
         </div>
 
@@ -654,13 +669,14 @@ export default function AdminPage() {
                   <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider text-center">Confirmação</th>
                   <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Status Pagamento</th>
                   <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider text-center">Noite Solene</th>
+                  <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider text-center">Pag. Adicional</th>
                   <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider text-right">Ações</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
                 {filteredInscricoes.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-4 py-12 text-center text-muted-foreground">
+                    <td colSpan={7} className="px-4 py-12 text-center text-muted-foreground">
                       Nenhuma inscrição encontrada
                     </td>
                   </tr>
@@ -748,6 +764,22 @@ export default function AdminPage() {
                           </button>
                         </td>
 
+                        {/* Pagamento Adicional */}
+                        <td className="px-4 py-4 text-center" onClick={(e) => e.stopPropagation()}>
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); handleTogglePagamentoAdicional(inscrito); }}
+                            disabled={editingPagamentoAdicionalId === inscrito.id}
+                            className={`p-2 rounded-full transition-all cursor-pointer hover:bg-muted inline-flex items-center justify-center ${inscrito.pagamento_adicional ? 'text-amber-600' : 'text-muted-foreground/30'}`}
+                            title={inscrito.pagamento_adicional ? "Acesso a workshops premium liberado" : "Sem acesso a workshops premium"}
+                          >
+                            {inscrito.pagamento_adicional ? (
+                              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M10.5 1.5H5.75A2.25 2.25 0 003.5 3.75v12.5A2.25 2.25 0 005.75 18.5h8.5a2.25 2.25 0 002.25-2.25V9M14.25 1.5L9 6.75M14.25 1.5h3v3" strokeWidth="1.5" stroke="currentColor" fill="none"/></svg>
+                            ) : (
+                              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                            )}
+                          </button>
+                        </td>
+
                         {/* Ações */}
                         <td className="px-4 py-4 text-right" onClick={(e) => e.stopPropagation()}>
                           <button 
@@ -762,7 +794,7 @@ export default function AdminPage() {
                       {/* Área Detalhada */}
                       {expandedId === inscrito.id && (
                         <tr className="bg-muted/20">
-                          <td colSpan={6} className="px-8 py-6 border-b border-border">
+                          <td colSpan={7} className="px-8 py-6 border-b border-border">
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                               <div className="space-y-2">
                                 <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Contato</h4>
@@ -777,7 +809,6 @@ export default function AdminPage() {
                               <div className="space-y-2">
                                 <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Preferências</h4>
                                 <p className="text-sm text-foreground"><strong>Workshop:</strong> {inscrito.escolha?.workshop || "Nenhum"}</p>
-                                <p className="text-sm text-foreground"><strong>Temas Livres:</strong> {inscrito.escolha?.participa_temas_livres ? "Sim" : "Não"}</p>
                               </div>
                             </div>
                           </td>

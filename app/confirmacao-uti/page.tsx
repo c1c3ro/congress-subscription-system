@@ -23,14 +23,6 @@ interface Workshop {
   vagas_disponiveis: number;
 }
 
-interface TemasLivres {
-  id: string;
-  congresso: string;
-  vagas_total: number;
-  vagas_ocupadas: number;
-  vagas_disponiveis: number;
-}
-
 interface Inscrito {
   id: string;
   nome_completo: string;
@@ -43,7 +35,6 @@ interface Inscrito {
 interface Escolha {
   id: string;
   workshop_id: string | null;
-  participa_temas_livres: boolean;
   workshop?: {
     id: string;
     titulo: string;
@@ -59,10 +50,8 @@ export default function ConfirmacaoUTIPage() {
   
   const [inscrito, setInscrito] = useState<Inscrito | null>(null);
   const [workshops, setWorkshops] = useState<Workshop[]>([]);
-  const [temasLivres, setTemasLivres] = useState<TemasLivres | null>(null);
   
   const [selectedWorkshop, setSelectedWorkshop] = useState<string | null>(null);
-  const [participaTemasLivres, setParticipaTemasLivres] = useState(false);
   
   const [escolhaConfirmada, setEscolhaConfirmada] = useState<Escolha | null>(null);
   const [noiteSoleneInfo, setNoiteSoleneInfo] = useState<{
@@ -139,7 +128,6 @@ export default function ConfirmacaoUTIPage() {
         setStep("confirmacao");
       } else {
         setWorkshops(data.workshops);
-        setTemasLivres(data.temasLivres);
         setStep("escolha");
       }
     } catch (err) {
@@ -162,7 +150,6 @@ export default function ConfirmacaoUTIPage() {
         body: JSON.stringify({
           inscrito_id: inscrito.id,
           workshop_id: selectedWorkshop,
-          participa_temas_livres: participaTemasLivres,
         }),
       });
 
@@ -312,52 +299,7 @@ export default function ConfirmacaoUTIPage() {
                 })}
               </div>
 
-              {temasLivres && (
-                <div className="space-y-3 pt-4 border-t">
-                  <Label className="text-base font-semibold">
-                    Deseja participar dos Temas Livres?
-                  </Label>
-                  <p className="text-sm text-muted-foreground">
-                    Momento em que participantes apresentam seus trabalhos acadêmicos.
-                  </p>
 
-                  <div className="flex gap-3">
-                    {temasLivres.vagas_disponiveis > 0 ? (
-                      <>
-                        <button
-                          onClick={() => setParticipaTemasLivres(true)}
-                          className={`
-                            flex-1 p-3 rounded-lg border-2 transition-all
-                            ${participaTemasLivres
-                              ? "bg-[#7D1128]/10 border-[#7D1128]"
-                              : "bg-white border-gray-200 hover:border-[#7D1128]/50"
-                            }
-                          `}
-                        >
-                          <p className="font-medium">Sim, quero participar</p>
-                        </button>
-                        <button
-                          onClick={() => setParticipaTemasLivres(false)}
-                          className={`
-                            flex-1 p-3 rounded-lg border-2 transition-all
-                            ${!participaTemasLivres
-                              ? "bg-[#7D1128]/10 border-[#7D1128]"
-                              : "bg-white border-gray-200 hover:border-[#7D1128]/50"
-                            }
-                          `}
-                        >
-                          <p className="font-medium">Não, obrigado</p>
-                        </button>
-                      </>
-                    ) : (
-                      <div className="w-full p-3 rounded-lg bg-gray-100 border-2 border-gray-200 opacity-60">
-                        <p className="font-medium text-gray-500">Temas Livres</p>
-                        <p className="text-xs text-gray-400">VAGAS ENCERRADAS</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
 
               {error && (
                 <p className="text-sm text-red-600 text-center">{error}</p>
@@ -397,12 +339,6 @@ export default function ConfirmacaoUTIPage() {
                   <p className="text-xs text-muted-foreground uppercase tracking-wide">Workshop</p>
                   <p className="font-medium">
                     {escolhaConfirmada.workshop?.titulo || "Nenhum selecionado"}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground uppercase tracking-wide">Temas Livres</p>
-                  <p className="font-medium">
-                    {escolhaConfirmada.participa_temas_livres ? "Participando" : "Não participando"}
                   </p>
                 </div>
               </div>

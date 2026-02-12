@@ -123,13 +123,12 @@ export async function GET(request: Request) {
     // Buscar escolhas com informações de workshops em uma única query
     const { data: escolhas } = await supabase
       .from("escolhas_inscrito")
-      .select("inscrito_id, participa_temas_livres, workshop_id, workshops(id, titulo)");
+      .select("inscrito_id, workshop_id, workshops(id, titulo)");
 
     const escolhasMap = new Map();
     (escolhas || []).forEach((e: any) => {
       escolhasMap.set(e.inscrito_id, {
         workshop: e.workshops?.titulo || null,
-        participa_temas_livres: e.participa_temas_livres,
       });
     });
 
@@ -158,11 +157,6 @@ export async function GET(request: Request) {
       vagas_ocupadas: vagas_map.get(workshop.id) || 0,
     }));
 
-    // Contar Temas Livres
-    const temasLivres = escolhasMap.size > 0
-      ? Array.from(escolhasMap.values()).filter((e: any) => e.participa_temas_livres).length
-      : 0;
-
     // Calcular estatísticas
     const stats = {
       total: inscricoes?.length || 0,
@@ -177,7 +171,6 @@ export async function GET(request: Request) {
       inscricoes: inscricoesComEscolhas,
       stats,
       workshops: workshopsComVagas,
-      temasLivres: { total: temasLivres },
     });
   } catch (error) {
     console.error("[v0] Erro na API GET inscrições:", error);
