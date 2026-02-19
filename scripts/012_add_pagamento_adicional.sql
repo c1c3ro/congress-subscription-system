@@ -1,9 +1,13 @@
--- Adicionar coluna de pagamento adicional na tabela inscricoes
-ALTER TABLE inscricoes ADD COLUMN pagamento_adicional BOOLEAN DEFAULT FALSE;
+-- Remover colunas antigas se existirem
+ALTER TABLE inscricoes DROP COLUMN IF EXISTS pagamento_adicional;
+ALTER TABLE workshops DROP COLUMN IF EXISTS eh_premium;
 
--- Adicionar coluna para marcar workshops como premium
-ALTER TABLE workshops ADD COLUMN eh_premium BOOLEAN DEFAULT FALSE;
+-- Adicionar coluna para classificar workshops como 'inclusos' ou 'adicionais'
+ALTER TABLE workshops ADD COLUMN tipo TEXT NOT NULL DEFAULT 'inclusos' CHECK (tipo IN ('inclusos', 'adicionais'));
 
--- Criar índice para melhor performance
-CREATE INDEX idx_inscricoes_pagamento_adicional ON inscricoes(pagamento_adicional);
-CREATE INDEX idx_workshops_eh_premium ON workshops(eh_premium);
+-- Adicionar coluna de workshops adicionais selecionados na tabela inscricoes (0, 1 ou 2)
+ALTER TABLE inscricoes ADD COLUMN workshops_adicionais INTEGER DEFAULT 0 CHECK (workshops_adicionais IN (0, 1, 2));
+
+-- Criar índices para melhor performance
+CREATE INDEX idx_workshops_tipo ON workshops(tipo);
+CREATE INDEX idx_inscricoes_workshops_adicionais ON inscricoes(workshops_adicionais);

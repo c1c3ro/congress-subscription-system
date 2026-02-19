@@ -127,14 +127,17 @@ export async function GET(request: Request) {
 
     const escolhasMap = new Map();
     (escolhas || []).forEach((e: any) => {
-      escolhasMap.set(e.inscrito_id, {
-        workshop: e.workshops?.titulo || null,
+      if (!escolhasMap.has(e.inscrito_id)) {
+        escolhasMap.set(e.inscrito_id, []);
+      }
+      escolhasMap.get(e.inscrito_id).push({
+        workshop: e.workshops,
       });
     });
 
     const inscricoesComEscolhas = (inscricoes || []).map((inscricao) => ({
       ...inscricao,
-      escolha: escolhasMap.get(inscricao.id) || null,
+      escolhas: escolhasMap.get(inscricao.id) || [],
     }));
 
     // Buscar workshops com contagem de vagas

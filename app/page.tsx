@@ -21,12 +21,15 @@ interface Inscricao {
   modalidade: string;
   hospital_parceiro: string | null;
   status_pagamento: string | null;
-  pagamento_adicional: boolean;
+  workshops_adicionais: number;
   participa_noite_solene: boolean;
   created_at: string;
-  escolha: {
-    workshop: string | null;
-  } | null;
+  escolhas: Array<{
+    workshop: {
+      id: string;
+      titulo: string;
+    } | null;
+  }> | null;
 }
 
 interface Workshop {
@@ -74,7 +77,8 @@ export default function AdminPage() {
   const [editingInscricaoId, setEditingInscricaoId] = useState<string | null>(null);
   const [editingPaymentValue, setEditingPaymentValue] = useState<string>("");
   const [editingNoiteSoleneId, setEditingNoiteSoleneId] = useState<string | null>(null);
-  const [editingPagamentoAdicionalId, setEditingPagamentoAdicionalId] = useState<string | null>(null);
+  const [editingWorkshopsAdicionaisId, setEditingWorkshopsAdicionaisId] = useState<string | null>(null);
+  const [editingWorkshopsAdicionaisValue, setEditingWorkshopsAdicionaisValue] = useState<number>(0);
   const [noiteSoleneCounter, setNoiteSoleneCounter] = useState({ total_confirmados: 0, limite_vagas: 150 });
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -225,19 +229,19 @@ export default function AdminPage() {
     }
   }
 
-  const handleTogglePagamentoAdicional = async (inscricao: Inscricao) => {
-    if (editingPagamentoAdicionalId === inscricao.id) return;
-    
-    setEditingPagamentoAdicionalId(inscricao.id);
-    
+  const handleOpenWorkshopsAdicionaisDropdown = (inscricao: Inscricao) => {
+    setEditingWorkshopsAdicionaisId(inscricao.id);
+    setEditingWorkshopsAdicionaisValue(inscricao.workshops_adicionais);
+  };
+
+  const handleSaveWorkshopsAdicionais = async (inscricaoId: string) => {
     try {
-      const novoValor = !inscricao.pagamento_adicional;
-      console.log("[v0] Alterando Pagamento Adicional:", { id: inscricao.id, novoValor });
+      console.log("[v0] Alterando Workshops Adicionais:", { id: inscricaoId, value: editingWorkshopsAdicionaisValue });
       
-      const response = await fetch(`/api/inscricoes/${inscricao.id}`, {
+      const response = await fetch(`/api/inscricoes/${inscricaoId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ pagamento_adicional: novoValor }),
+        body: JSON.stringify({ workshops_adicionais: editingWorkshopsAdicionaisValue }),
       });
 
       const responseData = await response.json();
@@ -248,13 +252,13 @@ export default function AdminPage() {
         await loadData(selectedCongresso);
       } else {
         console.error("[v0] Erro na resposta:", responseData);
-        alert("Erro ao atualizar Pagamento Adicional: " + (responseData.error || "desconhecido"));
+        alert("Erro ao atualizar Workshops Adicionais: " + (responseData.error || "desconhecido"));
       }
     } catch (error) {
       console.error("[v0] Erro na requisição:", error);
-      alert("Erro ao atualizar Pagamento Adicional: " + String(error));
+      alert("Erro ao atualizar Workshops Adicionais: " + String(error));
     } finally {
-      setEditingPagamentoAdicionalId(null);
+      setEditingWorkshopsAdicionaisId(null);
     }
   }
 
@@ -667,9 +671,9 @@ export default function AdminPage() {
                   <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Inscrito</th>
                   <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Modalidade</th>
                   <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider text-center">Confirmação</th>
-                  <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Status Pagamento</th>
+                  <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider text-center">Status Pagamento</th>
                   <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider text-center">Noite Solene</th>
-                  <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider text-center">Pag. Adicional</th>
+                  <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider text-center">Workshops Adicionais</th>
                   <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider text-right">Ações</th>
                 </tr>
               </thead>
@@ -711,8 +715,8 @@ export default function AdminPage() {
 
                         {/* Nova Coluna: Confirmação */}
                         <td className="px-4 py-4 text-center">
-                          <span className={`text-sm font-bold ${inscrito.escolha?.workshop ? 'text-green-600' : 'text-red-500'}`}>
-                            {inscrito.escolha?.workshop ? 'Sim' : 'Não'}
+                          <span className={`text-sm font-bold ${inscrito.escolhas && inscrito.escolhas.length > 0 ? 'text-green-600' : 'text-red-500'}`}>
+                            {inscrito.escolhas && inscrito.escolhas.length > 0 ? 'Sim' : 'Não'}
                           </span>
                         </td>
 
@@ -764,20 +768,29 @@ export default function AdminPage() {
                           </button>
                         </td>
 
-                        {/* Pagamento Adicional */}
+                        {/* Workshops Adicionais */}
                         <td className="px-4 py-4 text-center" onClick={(e) => e.stopPropagation()}>
-                          <button 
-                            onClick={(e) => { e.stopPropagation(); handleTogglePagamentoAdicional(inscrito); }}
-                            disabled={editingPagamentoAdicionalId === inscrito.id}
-                            className={`p-2 rounded-full transition-all cursor-pointer hover:bg-muted inline-flex items-center justify-center ${inscrito.pagamento_adicional ? 'text-amber-600' : 'text-muted-foreground/30'}`}
-                            title={inscrito.pagamento_adicional ? "Acesso a workshops premium liberado" : "Sem acesso a workshops premium"}
-                          >
-                            {inscrito.pagamento_adicional ? (
-                              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M10.5 1.5H5.75A2.25 2.25 0 003.5 3.75v12.5A2.25 2.25 0 005.75 18.5h8.5a2.25 2.25 0 002.25-2.25V9M14.25 1.5L9 6.75M14.25 1.5h3v3" strokeWidth="1.5" stroke="currentColor" fill="none"/></svg>
-                            ) : (
-                              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
-                            )}
-                          </button>
+                          {editingWorkshopsAdicionaisId === inscrito.id ? (
+                            <select
+                              value={editingWorkshopsAdicionaisValue}
+                              onChange={(e) => setEditingWorkshopsAdicionaisValue(Number(e.target.value))}
+                              onBlur={() => handleSaveWorkshopsAdicionais(inscrito.id)}
+                              autoFocus
+                              className="px-2 py-1 rounded border border-border bg-background text-foreground text-sm"
+                            >
+                              <option value={0}>0 adicionais</option>
+                              <option value={1}>1 adicional</option>
+                              <option value={2}>2 adicionais</option>
+                            </select>
+                          ) : (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleOpenWorkshopsAdicionaisDropdown(inscrito); }}
+                              className="px-3 py-1 rounded-md bg-muted hover:bg-muted/80 transition-colors cursor-pointer text-sm font-medium"
+                              title="Clique para editar o número de workshops adicionais"
+                            >
+                              {inscrito.workshops_adicionais} add.
+                            </button>
+                          )}
                         </td>
 
                         {/* Ações */}
@@ -808,7 +821,18 @@ export default function AdminPage() {
                               </div>
                               <div className="space-y-2">
                                 <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Preferências</h4>
-                                <p className="text-sm text-foreground"><strong>Workshop:</strong> {inscrito.escolha?.workshop || "Nenhum"}</p>
+                                <div className="text-sm text-foreground">
+                                  <strong>Workshops:</strong>
+                                  {inscrito.escolhas && inscrito.escolhas.length > 0 ? (
+                                    <ul className="ml-4 mt-1">
+                                      {inscrito.escolhas.map((escolha, idx) => (
+                                        <li key={idx}>• {escolha.workshop?.titulo || "Workshop inválido"}</li>
+                                      ))}
+                                    </ul>
+                                  ) : (
+                                    <p>Nenhum selecionado</p>
+                                  )}
+                                </div>
                               </div>
                             </div>
                           </td>
