@@ -21,7 +21,7 @@ interface Inscricao {
   modalidade: string;
   hospital_parceiro: string | null;
   status_pagamento: string | null;
-  workshops_adicionais: number;
+  quantidade_workshops: number;
   participa_noite_solene: boolean;
   created_at: string;
   escolhas: Array<{
@@ -77,8 +77,8 @@ export default function AdminPage() {
   const [editingInscricaoId, setEditingInscricaoId] = useState<string | null>(null);
   const [editingPaymentValue, setEditingPaymentValue] = useState<string>("");
   const [editingNoiteSoleneId, setEditingNoiteSoleneId] = useState<string | null>(null);
-  const [editingWorkshopsAdicionaisId, setEditingWorkshopsAdicionaisId] = useState<string | null>(null);
-  const [editingWorkshopsAdicionaisValue, setEditingWorkshopsAdicionaisValue] = useState<number>(0);
+  const [editingQuantidadeWorkshopsId, setEditingQuantidadeWorkshopsId] = useState<string | null>(null);
+  const [editingQuantidadeWorkshopsValue, setEditingQuantidadeWorkshopsValue] = useState<number>(1);
   const [noiteSoleneCounter, setNoiteSoleneCounter] = useState({ total_confirmados: 0, limite_vagas: 150 });
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -229,19 +229,19 @@ export default function AdminPage() {
     }
   }
 
-  const handleOpenWorkshopsAdicionaisDropdown = (inscricao: Inscricao) => {
-    setEditingWorkshopsAdicionaisId(inscricao.id);
-    setEditingWorkshopsAdicionaisValue(inscricao.workshops_adicionais);
+  const handleOpenQuantidadeWorkshopsDropdown = (inscricao: Inscricao) => {
+    setEditingQuantidadeWorkshopsId(inscricao.id);
+    setEditingQuantidadeWorkshopsValue(inscricao.quantidade_workshops);
   };
 
-  const handleSaveWorkshopsAdicionais = async (inscricaoId: string) => {
+  const handleSaveQuantidadeWorkshops = async (inscricaoId: string) => {
     try {
-      console.log("[v0] Alterando Workshops Adicionais:", { id: inscricaoId, value: editingWorkshopsAdicionaisValue });
+      console.log("[v0] Alterando Quantidade de Workshops:", { id: inscricaoId, value: editingQuantidadeWorkshopsValue });
       
       const response = await fetch(`/api/inscricoes/${inscricaoId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ workshops_adicionais: editingWorkshopsAdicionaisValue }),
+        body: JSON.stringify({ quantidade_workshops: editingQuantidadeWorkshopsValue }),
       });
 
       const responseData = await response.json();
@@ -252,13 +252,13 @@ export default function AdminPage() {
         await loadData(selectedCongresso);
       } else {
         console.error("[v0] Erro na resposta:", responseData);
-        alert("Erro ao atualizar Workshops Adicionais: " + (responseData.error || "desconhecido"));
+        alert("Erro ao atualizar Quantidade de Workshops: " + (responseData.error || "desconhecido"));
       }
     } catch (error) {
       console.error("[v0] Erro na requisição:", error);
-      alert("Erro ao atualizar Workshops Adicionais: " + String(error));
+      alert("Erro ao atualizar Quantidade de Workshops: " + String(error));
     } finally {
-      setEditingWorkshopsAdicionaisId(null);
+      setEditingQuantidadeWorkshopsId(null);
     }
   }
 
@@ -673,7 +673,7 @@ export default function AdminPage() {
                   <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider text-center">Confirmação</th>
                   <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider text-center">Status Pagamento</th>
                   <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider text-center">Noite Solene</th>
-                  <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider text-center">Workshops Adicionais</th>
+                  <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider text-center">Quantidade Workshops</th>
                   <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider text-right">Ações</th>
                 </tr>
               </thead>
@@ -770,25 +770,25 @@ export default function AdminPage() {
 
                         {/* Workshops Adicionais */}
                         <td className="px-4 py-4 text-center" onClick={(e) => e.stopPropagation()}>
-                          {editingWorkshopsAdicionaisId === inscrito.id ? (
+                          {editingQuantidadeWorkshopsId === inscrito.id ? (
                             <select
-                              value={editingWorkshopsAdicionaisValue}
-                              onChange={(e) => setEditingWorkshopsAdicionaisValue(Number(e.target.value))}
-                              onBlur={() => handleSaveWorkshopsAdicionais(inscrito.id)}
+                              value={editingQuantidadeWorkshopsValue}
+                              onChange={(e) => setEditingQuantidadeWorkshopsValue(Number(e.target.value))}
+                              onBlur={() => handleSaveQuantidadeWorkshops(inscrito.id)}
                               autoFocus
                               className="px-2 py-1 rounded border border-border bg-background text-foreground text-sm"
                             >
-                              <option value={0}>0 adicionais</option>
-                              <option value={1}>1 adicional</option>
-                              <option value={2}>2 adicionais</option>
+                              <option value={1}>Apenas inclusos (1)</option>
+                              <option value={2}>1 Inclusos + 1 adicional (2)</option>
+                              <option value={3}>1 Inclusos + 2 adicionais (3)</option>
                             </select>
                           ) : (
                             <button
-                              onClick={(e) => { e.stopPropagation(); handleOpenWorkshopsAdicionaisDropdown(inscrito); }}
+                              onClick={(e) => { e.stopPropagation(); handleOpenQuantidadeWorkshopsDropdown(inscrito); }}
                               className="px-3 py-1 rounded-md bg-muted hover:bg-muted/80 transition-colors cursor-pointer text-sm font-medium"
-                              title="Clique para editar o número de workshops adicionais"
+                              title="Clique para editar a quantidade de workshops"
                             >
-                              {inscrito.workshops_adicionais} add.
+                              {inscrito.quantidade_workshops} max
                             </button>
                           )}
                         </td>

@@ -16,9 +16,9 @@ const COLOR_THEME = "green";
 
 // Horários fictícios para os slots
 const HORARIOS = [
-  { slot: 0, dia: "Dia 1", horario: "08:30 - 10:00" },
-  { slot: 1, dia: "Dia 1", horario: "10:30 - 12:00" },
-  { slot: 2, dia: "Dia 1", horario: "14:00 - 15:30" },
+  { slot: 0, dia: "Dia 24/04", horario: "08:00 - 12:00" },
+  { slot: 1, dia: "Dia 24/04", horario: "14:00 - 18:00" },
+  { slot: 2, dia: "Dia 26/04", horario: "14:00 - 18:00" },
 ];
 
 interface Workshop {
@@ -45,7 +45,7 @@ interface Inscrito {
   email: string;
   congresso: string;
   participa_noite_solene: boolean;
-  workshops_adicionais: number;
+  quantidade_workshops: number;
 }
 
 interface Escolha {
@@ -183,8 +183,8 @@ export default function ConfirmacaoPage() {
       // Podem ter no máximo 1 workshop inclusos
       return selecionadosInclusos < 1;
     } else {
-      // Podem ter no máximo workshops_adicionais adicionais
-      return selecionadosAdicionais < (inscrito?.workshops_adicionais || 0);
+      // Podem ter no máximo quantidade_workshops - 1 adicionais
+      return selecionadosAdicionais < ((inscrito?.quantidade_workshops || 1) - 1);
     }
   };
 
@@ -200,8 +200,8 @@ export default function ConfirmacaoPage() {
       if (workshopSelecionado) {
         const slotSelecionado = Math.floor(workshopSelecionado.order / 3);
         
-        // Se são do mesmo tipo e no mesmo slot, não pode
-        if (workshopSelecionado.tipo === workshopParaSelecionado.tipo && slotSelecionado === slotDoNovo) {
+        // Se estão no mesmo slot (horário), não pode (independente do tipo)
+        if (slotSelecionado === slotDoNovo) {
           return true;
         }
       }
@@ -230,7 +230,7 @@ export default function ConfirmacaoPage() {
       }
 
       if (temConflitoPorHorario(workshop)) {
-        setError("Não é possível escolher dois workshops do mesmo tipo no mesmo horário.");
+        setError("Você não pode selecionar múltiplos workshops no mesmo horário.");
         setTimeout(() => setError(""), 3000);
         return;
       }
@@ -315,7 +315,7 @@ export default function ConfirmacaoPage() {
   };
 
   const selections = usedSelections();
-  const maxAdicionais = inscrito?.workshops_adicionais || 0;
+  const maxAdicionais = (inscrito?.quantidade_workshops || 1) - 1;
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-green-50 to-white flex items-center justify-center p-4">
@@ -410,12 +410,23 @@ export default function ConfirmacaoPage() {
                         const esgotado = workshop.vagas_disponiveis <= 0;
                         const selecionado = selectedWorkshops.has(workshop.id);
                         const podeAdicionar = podeSelecionar(workshop) && !temConflitoPorHorario(workshop);
+                        const temConflito = selectedWorkshops.size > 0 && temConflitoPorHorario(workshop);
+
+                        let titleAttr = "";
+                        if (esgotado) {
+                          titleAttr = "Este workshop não possui mais vagas disponíveis";
+                        } else if (temConflito) {
+                          titleAttr = "Você já selecionou um workshop neste horário";
+                        } else if (!podeAdicionar && selectedWorkshops.size > 0) {
+                          titleAttr = "Você atingiu o limite de workshops deste tipo";
+                        }
 
                         return (
                           <button
                             key={workshop.id}
                             onClick={() => handleToggleWorkshop(workshop.id)}
                             disabled={esgotado || (!selecionado && !podeAdicionar)}
+                            title={titleAttr}
                             className={`
                               w-full p-4 rounded-lg border-2 text-left transition-all
                               ${esgotado 
@@ -526,7 +537,7 @@ export default function ConfirmacaoPage() {
                         Parabéns!
                       </p>
                       <p className="text-sm text-purple-800">
-                        Você é uma das <strong>primeiras 150 inscrições</strong> confirmadas e poderá participar da <strong>Noite Solene</strong> do congresso!
+                        Você é uma das <strong>primeiras 50 inscrições</strong> confirmadas e poderá participar da <strong>Noite Solene</strong> do congresso!
                       </p>
                     </div>
                   </div>
@@ -542,7 +553,7 @@ export default function ConfirmacaoPage() {
                         Parabéns!
                       </p>
                       <p className="text-sm text-purple-800">
-                        Você é uma das <strong>primeiras 150 inscrições</strong> confirmadas e poderá participar da <strong>Noite Solene</strong> do congresso!
+                        Você é uma das <strong>primeiras 50 inscrições</strong> confirmadas e poderá participar da <strong>Noite Solene</strong> do congresso!
                       </p>
                     </div>
                   </div>

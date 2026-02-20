@@ -76,11 +76,11 @@ export async function GET(request: Request) {
   // Filtrar workshops conforme seleção de adicionais
   // Sempre mostra workshops inclusos, mas mostra adicionais apenas se o usuário tem direito
   let workshopsFiltrados = workshops;
-  if (inscrito.workshops_adicionais === 0) {
-    // Se não selecionou workshops adicionais, mostra apenas workshops inclusos
+  if (inscrito.quantidade_workshops === 1) {
+    // Se quantidade_workshops = 1, mostra apenas workshops inclusos
     workshopsFiltrados = workshops.filter((w) => w.tipo === 'inclusos');
   }
-  // Se selecionou workshops adicionais, mostra todos
+  // Se quantidade_workshops > 1, mostra todos
 
   // Contar vagas ocupadas por workshop
   const workshopsComVagas = await Promise.all(
@@ -184,21 +184,22 @@ export async function POST(request: Request) {
     );
   }
 
-  if (selecionadosAdicionais > inscrito.workshops_adicionais) {
+  const maxAdicionais = inscrito.quantidade_workshops - 1;
+  if (selecionadosAdicionais > maxAdicionais) {
     return NextResponse.json(
-      { error: `Você só pode selecionar até ${inscrito.workshops_adicionais} workshop(s) adicional(is)` },
+      { error: `Você só pode selecionar até ${maxAdicionais} workshop(s) adicional(is)` },
       { status: 400 }
     );
   }
 
-  // Validar conflitos de horário - não pode ter dois workshops do mesmo tipo no mesmo slot
-  const slots: Record<string, string> = {}; // formato: "tipo-slot" => workshop_id
+  // Validar conflitos de horário - não pode ter múltiplos workshops no mesmo slot (independente do tipo)
+  const slots: Record<string, string> = {}; // formato: "slot" => workshop_id
   for (const workshop of workshopsData) {
     const slot = Math.floor(workshop.order / 3);
-    const key = `${workshop.tipo}-${slot}`;
+    const key = `${slot}`;
     if (slots[key]) {
       return NextResponse.json(
-        { error: "Não é possível escolher dois workshops do mesmo tipo no mesmo horário" },
+        { error: "Você não pode selecionar múltiplos workshops no mesmo horário" },
         { status: 400 }
       );
     }

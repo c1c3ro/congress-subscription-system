@@ -13,7 +13,7 @@ export async function PATCH(
     const updateData: any = {};
     if (data.status_pagamento !== undefined) updateData.status_pagamento = data.status_pagamento;
     if (data.participa_noite_solene !== undefined) updateData.participa_noite_solene = data.participa_noite_solene;
-    if (data.workshops_adicionais !== undefined) updateData.workshops_adicionais = data.workshops_adicionais;
+    if (data.quantidade_workshops !== undefined) updateData.quantidade_workshops = data.quantidade_workshops;
 
     const { data: result, error } = await supabase
       .from("inscricoes")
