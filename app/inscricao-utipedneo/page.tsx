@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   description: "Realize sua inscrição no III Congresso de UTI Pediátrica e Neonatal. Participe de workshops especializados e networking com profissionais da área.",
   openGraph: {
     title: "Inscreva-se no III Congresso de UTI Pediátrica e Neonatal",
-    description: "Participe do maior evento de UTI Infantil do Cariri",
+    description: "Participe do maior evento de UTI Pediátrica e Neonatal do Cariri",
     images: [
       {
         url: "/logo-uti-pedneo.webp",
