@@ -64,6 +64,7 @@ export async function POST(request: Request) {
         area_outro: data.area_outro || null,
         modalidade: data.modalidade,
         hospital_parceiro: data.hospital_parceiro || null,
+        quantidade_workshops: data.quantidade_workshops || 1,
       })
       .select()
       .single();

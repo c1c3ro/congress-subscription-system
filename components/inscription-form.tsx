@@ -27,6 +27,7 @@ export function InscriptionForm({ congresso, congressoNome }: InscriptionFormPro
     area_outro: "",
     modalidade: "",
     hospital_parceiro: "",
+    quantidade_workshops: 1,
   });
 
   const formatPhone = (value: string) => {
@@ -40,7 +41,7 @@ export function InscriptionForm({ congresso, congressoNome }: InscriptionFormPro
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     
-    let formattedValue = value;
+    let formattedValue: any = value;
     if (name === "cpf") {
       formattedValue = formatCPF(value);
       // Validar CPF quando completo
@@ -55,6 +56,8 @@ export function InscriptionForm({ congresso, congressoNome }: InscriptionFormPro
       }
     } else if (name === "telefone") {
       formattedValue = formatPhone(value);
+    } else if (name === "quantidade_workshops") {
+      formattedValue = Number(value);
     }
 
     setFormData((prev) => ({ ...prev, [name]: formattedValue }));
@@ -318,6 +321,33 @@ export function InscriptionForm({ congresso, congressoNome }: InscriptionFormPro
             />
           </div>
         )}
+      </div>
+
+      {/* Quantidade de Workshops */}
+      <div>
+        <label className="block text-sm font-medium text-foreground mb-3">
+          Quantos workshops você irá fazer? *
+        </label>
+        <div className="space-y-2">
+          {[
+            { value: 1, label: "1 Workshop (1 incluso)" },
+            { value: 2, label: "2 Workshops (1 incluso + 1 adicional)" },
+            { value: 3, label: "3 Workshops (1 incluso + 2 adicionais)" },
+          ].map((option) => (
+            <label key={option.value} className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="radio"
+                name="quantidade_workshops"
+                value={option.value}
+                checked={formData.quantidade_workshops === option.value}
+                onChange={handleChange}
+                className="w-4 h-4 text-primary focus:ring-primary/20"
+                required
+              />
+              <span className="text-foreground">{option.label}</span>
+            </label>
+          ))}
+        </div>
       </div>
 
       {/* Erro */}

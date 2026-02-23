@@ -327,7 +327,7 @@ export default function ConfirmacaoPage() {
               alt={CONGRESSO_NOME}
               width={220}
               height={120}
-              className="object-contain max-h-28"
+              className="w-auto object-contain max-h-28"
             />
           </div>
 
@@ -389,10 +389,10 @@ export default function ConfirmacaoPage() {
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <p className="text-sm font-semibold text-blue-900 mb-2">Suas opções:</p>
                 <ul className="text-sm text-blue-800 space-y-1">
-                  <li>• <strong>1 workshop inclusos</strong> (obrigatório)</li>
+                  <li>• <strong>1 workshop incluso</strong> (obrigatório)</li>
                   <li>• <strong>Até {maxAdicionais} workshop(s) adicional(is)</strong></li>
                   <li className="text-xs text-blue-700 mt-2">
-                    ✓ Selecionados: {selections.inclusos}/1 inclusos, {selections.adicionais}/{maxAdicionais} adicionais
+                    ✓ Selecionados: {selections.inclusos}/1 incluso, {selections.adicionais}/{maxAdicionais} adicionais
                   </li>
                 </ul>
               </div>
@@ -450,7 +450,7 @@ export default function ConfirmacaoPage() {
                                       ? "bg-green-100 text-green-700"
                                       : "bg-amber-100 text-amber-700"
                                   }`}>
-                                    {workshop.tipo === "inclusos" ? "Inclusos" : "Adicional"}
+                                    {workshop.tipo === "inclusos" ? "Incluso" : "Adicional"}
                                   </span>
                                 </div>
                                 {esgotado && (
