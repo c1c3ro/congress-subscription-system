@@ -432,10 +432,10 @@ export default function ConfirmacaoPage() {
                               ${esgotado 
                                 ? "bg-gray-100 border-gray-200 cursor-not-allowed opacity-60" 
                                 : selecionado
-                                  ? "bg-[#7D1128]/10 border-[#7D1128]"
+                                  ? "bg-[#7D1128]/10 border-[#1a7d11]"
                                   : !podeAdicionar && selectedWorkshops.size > 0
                                     ? "bg-gray-50 border-gray-200 cursor-not-allowed opacity-60"
-                                    : "bg-white border-gray-200 hover:border-[#7D1128]/50"
+                                    : "bg-white border-gray-200 hover:border-[#1a7d11]/50"
                               }
                             `}
                           >
@@ -463,7 +463,7 @@ export default function ConfirmacaoPage() {
                                 )}
                               </div>
                               {selecionado && !esgotado && (
-                                <div className="w-5 h-5 rounded-full bg-[#7D1128] flex items-center justify-center shrink-0">
+                                <div className="w-5 h-5 rounded-full bg-[#1a7d11] flex items-center justify-center shrink-0">
                                   <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                                   </svg>
