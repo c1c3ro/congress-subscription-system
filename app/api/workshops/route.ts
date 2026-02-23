@@ -37,18 +37,23 @@ export async function GET(request: Request) {
   }
 
   // Verificar se já fez escolhas
-  const { data: escolhaExistente } = await supabase
+  const { data: escolhasExistentes } = await supabase
     .from("escolhas_inscrito")
     .select("*, workshops(*)")
-    .eq("inscrito_id", inscrito.id)
-    .maybeSingle();
+    .eq("inscrito_id", inscrito.id);
 
-  if (escolhaExistente) {
+  if (escolhasExistentes && escolhasExistentes.length > 0) {
     return NextResponse.json({
       inscrito,
       escolhaExistente: {
-        ...escolhaExistente,
-        workshop: escolhaExistente.workshops,
+        id: inscrito.id,
+        workshop_ids: escolhasExistentes.map((e) => e.workshop_id).filter(Boolean),
+        workshops: escolhasExistentes
+          .filter((e) => e.workshops)
+          .map((e) => ({
+            id: e.workshops?.id,
+            titulo: e.workshops?.titulo,
+          })),
       },
       jaEscolheu: true,
     });
@@ -59,7 +64,7 @@ export async function GET(request: Request) {
     .from("workshops")
     .select("*")
     .eq("congresso", inscrito.congresso)
-    .order("titulo");
+    .order("order", { ascending: true });
 
   if (workshopsError) {
     return NextResponse.json(
@@ -68,9 +73,18 @@ export async function GET(request: Request) {
     );
   }
 
+  // Filtrar workshops conforme seleção de adicionais
+  // Sempre mostra workshops inclusos, mas mostra adicionais apenas se o usuário tem direito
+  let workshopsFiltrados = workshops;
+  if (inscrito.quantidade_workshops === 1) {
+    // Se quantidade_workshops = 1, mostra apenas workshops inclusos
+    workshopsFiltrados = workshops.filter((w) => w.tipo === 'inclusos');
+  }
+  // Se quantidade_workshops > 1, mostra todos
+
   // Contar vagas ocupadas por workshop
   const workshopsComVagas = await Promise.all(
-    workshops.map(async (workshop) => {
+    workshopsFiltrados.map(async (workshop) => {
       const { count } = await supabase
         .from("escolhas_inscrito")
         .select("*", { count: "exact", head: true })
@@ -84,30 +98,9 @@ export async function GET(request: Request) {
     })
   );
 
-  // Buscar vagas de Temas Livres
-  const { data: temasLivres } = await supabase
-    .from("temas_livres")
-    .select("*")
-    .eq("congresso", inscrito.congresso)
-    .single();
-
-  // Contar participantes de Temas Livres
-  const { data: inscritosDoCongressoComEscolha } = await supabase
-    .from("escolhas_inscrito")
-    .select("inscrito_id, participa_temas_livres, inscricoes!inner(congresso)")
-    .eq("participa_temas_livres", true)
-    .eq("inscricoes.congresso", inscrito.congresso);
-
-  const temasLivresOcupadas = inscritosDoCongressoComEscolha?.length || 0;
-
   return NextResponse.json({
     inscrito,
     workshops: workshopsComVagas,
-    temasLivres: {
-      ...temasLivres,
-      vagas_ocupadas: temasLivresOcupadas,
-      vagas_disponiveis: (temasLivres?.vagas_total || 3) - temasLivresOcupadas,
-    },
     jaEscolheu: false,
   });
 }
@@ -115,7 +108,7 @@ export async function GET(request: Request) {
 // POST - Salvar escolhas do inscrito
 export async function POST(request: Request) {
   const body = await request.json();
-  const { inscrito_id, workshop_id, participa_temas_livres } = body;
+  const { inscrito_id, workshop_ids } = body;
 
   if (!inscrito_id) {
     return NextResponse.json(
@@ -124,16 +117,22 @@ export async function POST(request: Request) {
     );
   }
 
+  if (!workshop_ids || !Array.isArray(workshop_ids) || workshop_ids.length === 0) {
+    return NextResponse.json(
+      { error: "Pelo menos 1 workshop deve ser selecionado" },
+      { status: 400 }
+    );
+  }
+
   const supabase = await createClient();
 
   // Verificar se já existe escolha
-  const { data: escolhaExistente } = await supabase
+  const { data: escolhasExistentes } = await supabase
     .from("escolhas_inscrito")
     .select("*")
-    .eq("inscrito_id", inscrito_id)
-    .maybeSingle();
+    .eq("inscrito_id", inscrito_id);
 
-  if (escolhaExistente) {
+  if (escolhasExistentes && escolhasExistentes.length > 0) {
     return NextResponse.json(
       { error: "Você já fez suas escolhas anteriormente." },
       { status: 400 }
@@ -154,78 +153,107 @@ export async function POST(request: Request) {
     );
   }
 
-  // Validar vagas do workshop se selecionado
-  if (workshop_id) {
-    const { data: workshop } = await supabase
-      .from("workshops")
-      .select("*")
-      .eq("id", workshop_id)
-      .single();
+  // Buscar todos os workshops selecionados
+  const { data: workshopsData, error: workshopsError } = await supabase
+    .from("workshops")
+    .select("*")
+    .in("id", workshop_ids);
 
-    if (!workshop) {
+  if (workshopsError) {
+    return NextResponse.json(
+      { error: "Erro ao buscar workshops" },
+      { status: 500 }
+    );
+  }
+
+  if (!workshopsData || workshopsData.length !== workshop_ids.length) {
+    return NextResponse.json(
+      { error: "Um ou mais workshops não foram encontrados" },
+      { status: 404 }
+    );
+  }
+
+  // Validar seleções
+  const selecionadosInclusos = workshopsData.filter((w) => w.tipo === 'inclusos').length;
+  const selecionadosAdicionais = workshopsData.filter((w) => w.tipo === 'adicionais').length;
+
+  if (selecionadosInclusos !== 1) {
+    return NextResponse.json(
+      { error: "Você deve selecionar exatamente 1 workshop inclusos" },
+      { status: 400 }
+    );
+  }
+
+  const maxAdicionais = inscrito.quantidade_workshops - 1;
+  if (selecionadosAdicionais > maxAdicionais) {
+    return NextResponse.json(
+      { error: `Você só pode selecionar até ${maxAdicionais} workshop(s) adicional(is)` },
+      { status: 400 }
+    );
+  }
+
+  // Validar conflitos de horário - não pode ter múltiplos workshops no mesmo slot (independente do tipo)
+  const slots: Record<string, string> = {}; // formato: "slot" => workshop_id
+  for (const workshop of workshopsData) {
+    const slot = Math.floor(workshop.order / 3);
+    const key = `${slot}`;
+    if (slots[key]) {
       return NextResponse.json(
-        { error: "Workshop não encontrado" },
-        { status: 404 }
+        { error: "Você não pode selecionar múltiplos workshops no mesmo horário" },
+        { status: 400 }
       );
     }
+    slots[key] = workshop.id;
+  }
 
+  // Validar vagas para cada workshop
+  for (const workshop of workshopsData) {
     const { count: vagasOcupadas } = await supabase
       .from("escolhas_inscrito")
       .select("*", { count: "exact", head: true })
-      .eq("workshop_id", workshop_id);
+      .eq("workshop_id", workshop.id);
 
     if ((vagasOcupadas || 0) >= workshop.vagas_total) {
       return NextResponse.json(
-        { error: "Este workshop não possui mais vagas disponíveis" },
+        { error: `O workshop "${workshop.titulo}" não possui mais vagas disponíveis` },
         { status: 400 }
       );
     }
   }
 
-  // Validar vagas de Temas Livres se selecionado
-  if (participa_temas_livres) {
-    const { data: temasLivres } = await supabase
-      .from("temas_livres")
-      .select("*")
-      .eq("congresso", inscrito.congresso)
-      .single();
+  // Criar registros para cada workshop selecionado
+  const escolhasArray = workshop_ids.map((wid) => ({
+    inscrito_id,
+    workshop_id: wid,
+  }));
 
-    const { data: participantesTemasLivres } = await supabase
-      .from("escolhas_inscrito")
-      .select("inscrito_id, participa_temas_livres, inscricoes!inner(congresso)")
-      .eq("participa_temas_livres", true)
-      .eq("inscricoes.congresso", inscrito.congresso);
-
-    const vagasOcupadasTL = participantesTemasLivres?.length || 0;
-
-    if (vagasOcupadasTL >= (temasLivres?.vagas_total || 3)) {
-      return NextResponse.json(
-        { error: "Não há mais vagas disponíveis para Temas Livres" },
-        { status: 400 }
-      );
-    }
-  }
-
-  // Inserir escolha
-  const { data: novaEscolha, error } = await supabase
+  const { error: insertError } = await supabase
     .from("escolhas_inscrito")
-    .insert({
-      inscrito_id,
-      workshop_id: workshop_id || null,
-      participa_temas_livres: participa_temas_livres || false,
-    })
-    .select("*, workshops(*)")
-    .single();
+    .insert(escolhasArray);
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  if (insertError) {
+    return NextResponse.json({ error: insertError.message }, { status: 500 });
+  }
+
+  // Buscar as escolhas criadas com os dados dos workshops
+  const { data: novasEscolhas, error: selectError } = await supabase
+    .from("escolhas_inscrito")
+    .select("*, workshops(*)")
+    .eq("inscrito_id", inscrito_id);
+
+  if (selectError) {
+    return NextResponse.json({ error: selectError.message }, { status: 500 });
   }
 
   return NextResponse.json({
     success: true,
     escolha: {
-      ...novaEscolha,
-      workshop: novaEscolha.workshops,
+      id: inscrito_id,
+      workshop_ids: workshop_ids,
+      workshops: novasEscolhas?.map((e) => ({
+        id: e.workshops?.id,
+        titulo: e.workshops?.titulo,
+      })) || [],
     },
   });
 }
