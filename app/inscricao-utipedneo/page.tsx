@@ -1,9 +1,24 @@
 import Image from "next/image";
+import { Metadata } from "next";
 import { InscriptionForm } from "@/components/inscription-form";
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "Inscrição - III Congresso de UTI Pediátrica e Neonatal",
-  description: "Realize sua inscrição no III Congresso de UTI Pediátrica e Neonatal",
+  description: "Realize sua inscrição no III Congresso de UTI Pediátrica e Neonatal. Participe de workshops especializados e networking com profissionais da área.",
+  openGraph: {
+    title: "Inscreva-se no III Congresso de UTI Pediátrica e Neonatal",
+    description: "Participe do maior evento de UTI Infantil do Cariri",
+    images: [
+      {
+        url: "/logo-uti-pedneo.webp",
+        width: 350,
+        height: 150,
+        alt: "III Congresso de UTI Pediátrica e Neonatal",
+      },
+    ],
+    type: "website",
+    locale: "pt_BR",
+  },
 };
 
 export default function InscricaoUTIPedNeoPage() {
