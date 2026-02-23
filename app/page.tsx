@@ -401,7 +401,7 @@ export default function AdminPage() {
               >
                 <div className="flex justify-center mb-4">
                   <Image
-                    src="/logo-uti-ped-neo.webp"
+                    src="/logo-uti-pedneo.webp"
                     alt="III Congresso de UTI Pediátrica e Neonatal"
                     width={200}
                     height={120}
@@ -453,7 +453,7 @@ export default function AdminPage() {
         <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
           <div className="flex items-center gap-4">
             <Image
-              src={selectedCongresso === "uti" ? "/logo-uti-adulto.webp" : "/logo-uti-ped-neo.webp"}
+              src={selectedCongresso === "uti" ? "/logo-uti-adulto.webp" : "/logo-uti-pedneo.webp"}
               alt={congressoNames[selectedCongresso]}
               width={150}
               height={100}

@@ -12,7 +12,7 @@ export default function InscricaoUTIPedNeoPage() {
       <div className="max-w-xl mx-auto">
         <div className="flex justify-center mb-8">
           <Image
-            src="/logo-uti-ped-neo.webp"
+            src="/logo-uti-pedneo.webp"
             alt="III Congresso de UTI Pediátrica e Neonatal"
             width={350}
             height={150}
