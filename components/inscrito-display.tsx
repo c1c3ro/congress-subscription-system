@@ -75,7 +75,7 @@ export default function InscritoDisplay({ inscrito, onReset, onAttendanceUpdate 
   const getCongressoLabel = (congresso: string) => {
     const labels: Record<string, string> = {
       uti: "Congresso UTI",
-      utipedneo: "Congresso Pediatria / Neonatologiae",
+      utipedneo: "Congresso UTI Ped e Neo",
     }
     return labels[congresso] || congresso
   }
@@ -110,17 +110,54 @@ export default function InscritoDisplay({ inscrito, onReset, onAttendanceUpdate 
               <p className="text-sm md:text-base text-muted-foreground">{getCongressoLabel(inscrito.congresso)}</p>
             </div>
           </div>
-          <Badge variant="outline" className="text-sm md:text-base px-3 py-1.5 md:px-4 md:py-2 self-start sm:self-auto">
+          <Badge
+            variant="outline"
+            className={`text-sm md:text-base px-3 py-1.5 md:px-4 md:py-2 self-start sm:self-auto ${
+              inscrito.workshops.length > 0
+                ? "bg-green-50 text-green-700 border-green-300"
+                : "bg-blue-50 text-blue-700 border-blue-300"
+            }`}
+          >
             <span className="flex items-center gap-2">
-              <Clock className="w-4 h-4" />
-              Inscrito
+              {inscrito.workshops.length > 0 ? (
+                <CheckCircle2 className="w-4 h-4" />
+              ) : (
+                <Clock className="w-4 h-4" />
+              )}
+              {inscrito.workshops.length > 0 ? "Confirmado" : "Inscrito"}
             </span>
           </Badge>
         </div>
 
         <div className="space-y-3 md:space-y-4">
+
+        {/* Workshops */}
+          {inscrito.workshops.length > 0 && (
+            <div className="bg-purple-50 rounded-lg p-4 md:p-6 border border-purple-200">
+              <h3 className="font-semibold text-base md:text-lg mb-4">
+                <span className="flex items-center gap-2">
+                  <Users className="w-5 h-5" />
+                  Workshops ({inscrito.workshops.length})
+                </span>
+              </h3>
+              <div className="space-y-2">
+                {inscrito.workshops.map((workshop) => (
+                  <div
+                    key={workshop.id}
+                    className="bg-purple-100 rounded p-3 flex items-center justify-between"
+                  >
+                    <p className="font-medium text-sm md:text-base">{workshop.titulo}</p>
+                    {/* <Badge variant="secondary" className="text-xs">
+                      {workshop.congresso}
+                    </Badge> */}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Informações Pessoais */}
-          <div className="bg-slate-50 dark:bg-slate-900 rounded-lg p-4 md:p-6 border border-slate-200 dark:border-slate-700">
+          <div className="bg-slate-50 rounded-lg p-4 md:p-6 border border-slate-200">
             <h3 className="font-semibold text-base md:text-lg mb-4">Informações Pessoais</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -136,14 +173,14 @@ export default function InscritoDisplay({ inscrito, onReset, onAttendanceUpdate 
                 <p className="font-medium">{inscrito.telefone}</p>
               </div>
               <div>
-                <p className="text-xs md:text-sm text-muted-foreground mb-1">Tipo de Aluno</p>
+                <p className="text-xs md:text-sm text-muted-foreground mb-1">Aluno NAD</p>
                 <p className="font-medium">{getTipoAlunoLabel(inscrito.tipo_aluno)}</p>
               </div>
             </div>
           </div>
 
           {/* Informações do Congresso */}
-          <div className="bg-blue-50 dark:bg-blue-950 rounded-lg p-4 md:p-6 border border-blue-200 dark:border-blue-800">
+          <div className="bg-blue-50 rounded-lg p-4 md:p-6 border border-blue-200">
             <h3 className="font-semibold text-base md:text-lg mb-4">Congresso</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -167,33 +204,8 @@ export default function InscritoDisplay({ inscrito, onReset, onAttendanceUpdate 
             </div>
           </div>
 
-          {/* Workshops */}
-          {inscrito.workshops.length > 0 && (
-            <div className="bg-purple-50 dark:bg-purple-950 rounded-lg p-4 md:p-6 border border-purple-200 dark:border-purple-800">
-              <h3 className="font-semibold text-base md:text-lg mb-4">
-                <span className="flex items-center gap-2">
-                  <Users className="w-5 h-5" />
-                  Workshops ({inscrito.workshops.length})
-                </span>
-              </h3>
-              <div className="space-y-2">
-                {inscrito.workshops.map((workshop) => (
-                  <div
-                    key={workshop.id}
-                    className="bg-white dark:bg-slate-800 rounded p-3 flex items-center justify-between"
-                  >
-                    <p className="font-medium text-sm md:text-base">{workshop.titulo}</p>
-                    <Badge variant="secondary" className="text-xs">
-                      {workshop.congresso}
-                    </Badge>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
           {/* Comparecimento */}
-          <div
+          {/* <div
             className={`rounded-lg p-4 md:p-6 border-2 transition-colors ${
               attended
                 ? "bg-emerald-50 dark:bg-gray-50 border-emerald-500"
@@ -231,7 +243,7 @@ export default function InscritoDisplay({ inscrito, onReset, onAttendanceUpdate 
                 </>
               )}
             </div>
-          </div>
+          </div> */}
 
           {/* Botão Voltar */}
           <div className="flex gap-3 pt-4">

@@ -157,7 +157,7 @@ export default function IdentificadorPage() {
     const style = colors[congresso] || { bg: "bg-gray-50", text: "text-gray-700" }
     const labels: Record<string, string> = {
       uti: "UTI",
-      utipedneo: "Pediatria/Neonatologia",
+      utipedneo: "UTI Ped e Neo",
     }
     return (
       <Badge variant="outline" className={`${style.bg} border-none ${style.text}`}>
