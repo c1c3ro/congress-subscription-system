@@ -40,7 +40,7 @@ interface Workshop {
 }
 
 interface Stats {
-  total: number;
+  total: number; 
   estudantes: number;
   profissionais: number;
   parceiros: number;
