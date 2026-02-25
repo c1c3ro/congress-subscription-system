@@ -91,7 +91,7 @@ export default function ConfirmacaoPage() {
           width: 200,
           margin: 2,
           color: {
-            dark: "#7D1128",
+            dark: "#0b0b0b",
             light: "#FFFFFF",
           },
         }
@@ -377,7 +377,7 @@ export default function ConfirmacaoPage() {
           {step === "escolha" && inscrito && (
             <div className="space-y-6">
               <div className="text-center">
-                <h1 className="text-xl font-bold text-[#7D1128] mb-1">
+                <h1 className="text-xl font-bold text-gray-700 mb-1">
                   Olá, {inscrito.nome_completo.split(" ")[0]}!
                 </h1>
                 <p className="text-sm text-muted-foreground">
@@ -500,7 +500,7 @@ export default function ConfirmacaoPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
-                <h1 className="text-xl font-bold text-[#7D1128] mb-1">
+                <h1 className="text-xl font-bold text-green-700 mb-1">
                   Escolhas Confirmadas!
                 </h1>
                 <p className="text-sm text-muted-foreground">
@@ -571,7 +571,7 @@ export default function ConfirmacaoPage() {
                 </div>
               </div>
 
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-gray-700 font-semibold">
                 Guarde este link! Você pode acessá-lo novamente para ver suas escolhas e QR Code.
               </p>
             </div>

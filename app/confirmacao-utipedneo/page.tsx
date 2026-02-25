@@ -91,7 +91,7 @@ export default function ConfirmacaoPage() {
           width: 200,
           margin: 2,
           color: {
-            dark: "#E11D48",
+            dark: "#0b0b0b",
             light: "#FFFFFF",
           },
         }
@@ -377,7 +377,7 @@ export default function ConfirmacaoPage() {
           {step === "escolha" && inscrito && (
             <div className="space-y-6">
               <div className="text-center">
-                <h1 className="text-xl font-bold text-[#E11D48] mb-1">
+                <h1 className="text-xl font-bold text-gray-700 mb-1">
                   Olá, {inscrito.nome_completo.split(" ")[0]}!
                 </h1>
                 <p className="text-sm text-muted-foreground">
@@ -495,12 +495,12 @@ export default function ConfirmacaoPage() {
           {step === "confirmacao" && inscrito && escolhaConfirmada && (
             <div className="space-y-6 text-center">
               <div>
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-pink-100 flex items-center justify-center">
-                  <svg className="w-8 h-8 text-pink-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-100 flex items-center justify-center">
+                  <svg className="w-8 h-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
-                <h1 className="text-xl font-bold text-[#E11D48] mb-1">
+                <h1 className="text-xl font-bold text-green-700 mb-1">
                   Escolhas Confirmadas!
                 </h1>
                 <p className="text-sm text-muted-foreground">
@@ -571,7 +571,7 @@ export default function ConfirmacaoPage() {
                 </div>
               </div>
 
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-gray-700 font-semibold">
                 Guarde este link! Você pode acessá-lo novamente para ver suas escolhas e QR Code.
               </p>
             </div>
