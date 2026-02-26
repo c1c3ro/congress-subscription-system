@@ -27,7 +27,7 @@ export function InscriptionForm({ congresso, congressoNome }: InscriptionFormPro
     area_outro: "",
     modalidade: "",
     hospital_parceiro: "",
-    quantidade_workshops: 1,
+    quantidade_workshops: 0,
   });
 
   const formatPhone = (value: string) => {
