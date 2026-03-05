@@ -30,6 +30,7 @@ interface Workshop {
   vagas_disponiveis: number;
   tipo: "inclusos" | "adicionais";
   order: number;
+  slot: number;
 }
 
 interface WorkshopPorHorario {
@@ -104,10 +105,7 @@ export default function ConfirmacaoPage() {
     const agrupados: WorkshopPorHorario[] = [];
     
     for (let slotIndex = 0; slotIndex < 3; slotIndex++) {
-      const workshopsDoSlot = workshops.filter((w) => {
-        const slot = Math.floor(w.order / 3);
-        return slot === slotIndex;
-      });
+      const workshopsDoSlot = workshops.filter((w) => w.slot === slotIndex);
       
       if (workshopsDoSlot.length > 0) {
         const horarioInfo = HORARIOS[slotIndex];
@@ -190,7 +188,7 @@ export default function ConfirmacaoPage() {
 
   // Checar se pode selecionar pela restrição de horário
   const temConflitoPorHorario = (workshopParaSelecionado: Workshop): boolean => {
-    const slotDoNovo = Math.floor(workshopParaSelecionado.order / 3);
+    const slotDoNovo = workshopParaSelecionado.slot;
 
     for (const id of selectedWorkshops) {
       const workshopSelecionado = workshopsAgrupados
@@ -198,7 +196,7 @@ export default function ConfirmacaoPage() {
         .find((w) => w.id === id);
 
       if (workshopSelecionado) {
-        const slotSelecionado = Math.floor(workshopSelecionado.order / 3);
+        const slotSelecionado = workshopSelecionado.slot;
         
         // Se estão no mesmo slot (horário), não pode (independente do tipo)
         if (slotSelecionado === slotDoNovo) {
