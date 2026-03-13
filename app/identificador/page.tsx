@@ -104,30 +104,46 @@ export default function IdentificadorPage() {
 
   const handleScanSuccess = async (decodedText: string) => {
     try {
-      let inscritoId = decodedText.trim()
+      const rawtextId = decodedText.trim()
+      console.log("[Scanner] QR Code lido com sucesso:", rawtextId)
 
-      // Check if it's a URL
-      try {
-        const url = new URL(decodedText)
-        const pathParts = url.pathname.split("/")
-        inscritoId = pathParts[pathParts.length - 1]
-      } catch {
-        // Not a URL, assume it's a direct ID
-        inscritoId = decodedText.trim()
+      // Remove espaços em branco
+      let inscritoId = rawtextId.replace(/\s+/g, "")
+
+      // Se for uma URL, extrai o último segmento
+      if (inscritoId.includes("/")) {
+        try {
+          const url = new URL(rawtextId)
+          inscritoId = url.pathname.split("/").filter(Boolean).pop() || inscritoId
+          console.log("[Scanner] ID extraído da URL:", inscritoId)
+        } catch {
+          // Se não for URL válida, usa como está
+          inscritoId = rawtextId.trim()
+        }
       }
 
-      // Search in local list
-      const inscrito = filteredInscritos.find((i) => i.id === inscritoId)
+      console.log("[Scanner] Procurando por ID:", inscritoId)
+      console.log("[Scanner] Total de inscritos disponíveis:", allInscritos.length)
+
+      // Busca exata por ID
+      let inscrito = allInscritos.find((i) => i.id === inscritoId)
 
       if (!inscrito) {
-        throw new Error("Inscrito não encontrado")
+        console.log(
+          "[Scanner] IDs disponíveis:",
+          allInscritos.map((i) => i.id),
+        )
+        throw new Error(`Inscrito com ID "${inscritoId}" não encontrado`)
       }
 
+      console.log("[Scanner] Inscrito encontrado:", inscrito.nome_completo)
       setSelectedInscrito(inscrito)
     } catch (err) {
-      console.error("Error finding inscrito:", err)
+      console.error("[Scanner] Erro:", err instanceof Error ? err.message : String(err))
       setSelectedInscrito(null)
-      alert("Inscrito não encontrado ou QR code inválido")
+      alert(
+        `Erro ao processar QR code: ${err instanceof Error ? err.message : "QR code inválido"}`,
+      )
     }
   }
 
