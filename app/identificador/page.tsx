@@ -7,27 +7,29 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
 import QRScanner from "@/components/qr-scanner"
-import GuestDisplay from "@/components/guest-display"
+import InscritoDisplay from "@/components/inscrito-display"
 import { Lock, Search, Camera, List } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 
-interface Guest {
+interface Inscrito {
   id: string
-  name: string
-  companion?: string
+  nome_completo: string
+  cpf: string
+  email: string
+  telefone: string
+  congresso: string
+  tipo_aluno: string
+  area: string
+  modalidade: string
+  quantidade_workshops: number
+  workshops: Array<{
+    id: string
+    titulo: string
+    congresso: string
+  }>
   created_at: string
-  attended?: boolean // Added attended field
-}
-
-interface Confirmation {
-  guestId: string
-  status: string
-  confirmed: boolean
-  timestamp: string
-}
-
-interface GuestWithConfirmation extends Guest {
-  confirmation?: Confirmation
+  attended?: boolean
+  participa_noite_solene?: boolean
 }
 
 export default function IdentificadorPage() {
@@ -35,52 +37,44 @@ export default function IdentificadorPage() {
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
-  const [selectedGuest, setSelectedGuest] = useState<GuestWithConfirmation | null>(null)
+  const [selectedInscrito, setSelectedInscrito] = useState<Inscrito | null>(null)
   const [scanKey, setScanKey] = useState(0)
 
-  const [allGuests, setAllGuests] = useState<Guest[]>([])
-  const [allConfirmations, setAllConfirmations] = useState<Confirmation[]>([])
+  const [allInscritos, setAllInscritos] = useState<Inscrito[]>([])
   const [searchQuery, setSearchQuery] = useState("")
   const [viewMode, setViewMode] = useState<"scanner" | "list">("scanner")
-  const [loadingGuests, setLoadingGuests] = useState(false)
+  const [loadingInscritos, setLoadingInscritos] = useState(false)
 
   useEffect(() => {
     if (isAuthenticated) {
-      loadAllGuests()
+      loadAllInscritos()
     }
   }, [isAuthenticated])
 
-  const loadAllGuests = async () => {
-    setLoadingGuests(true)
+  const loadAllInscritos = async () => {
+    setLoadingInscritos(true)
     try {
-      const response = await fetch("/api/admin/data")
+      const response = await fetch("/api/admin/inscricoes-data")
       if (response.ok) {
         const data = await response.json()
-        setAllGuests(data.guests || [])
-        setAllConfirmations(data.confirmations || [])
+        setAllInscritos(data.inscritos || [])
       }
     } catch (err) {
-      console.error("Error loading guests:", err)
+      console.error("Error loading inscritos:", err)
     } finally {
-      setLoadingGuests(false)
+      setLoadingInscritos(false)
     }
   }
 
-  const guestsWithConfirmations = useMemo(() => {
-    return allGuests.map((guest) => {
-      const confirmation = allConfirmations.find((c) => c.guestId === guest.id)
-      return { ...guest, confirmation }
-    })
-  }, [allGuests, allConfirmations])
-
-  const filteredGuests = useMemo(() => {
-    if (!searchQuery.trim()) return guestsWithConfirmations
+  const filteredInscritos = useMemo(() => {
+    if (!searchQuery.trim()) return allInscritos
 
     const query = searchQuery.toLowerCase()
-    return guestsWithConfirmations.filter(
-      (guest) => guest.name.toLowerCase().includes(query) || guest.companion?.toLowerCase().includes(query),
+    return allInscritos.filter(
+      (inscrito) =>
+        inscrito.nome_completo.toLowerCase().includes(query) || inscrito.cpf.includes(query),
     )
-  }, [guestsWithConfirmations, searchQuery])
+  }, [allInscritos, searchQuery])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -110,82 +104,79 @@ export default function IdentificadorPage() {
 
   const handleScanSuccess = async (decodedText: string) => {
     try {
-      let guestId = decodedText.trim()
+      let inscritoId = decodedText.trim()
 
       // Check if it's a URL
       try {
         const url = new URL(decodedText)
         const pathParts = url.pathname.split("/")
-        guestId = pathParts[pathParts.length - 1]
+        inscritoId = pathParts[pathParts.length - 1]
       } catch {
-        // Not a URL, assume it's a direct guest ID
-        guestId = decodedText.trim()
+        // Not a URL, assume it's a direct ID
+        inscritoId = decodedText.trim()
       }
 
-      // Search in local guest list
-      const guest = guestsWithConfirmations.find((g) => g.id === guestId)
+      // Search in local list
+      const inscrito = filteredInscritos.find((i) => i.id === inscritoId)
 
-      if (!guest) {
-        throw new Error("Convidado não encontrado")
+      if (!inscrito) {
+        throw new Error("Inscrito não encontrado")
       }
 
-      setSelectedGuest(guest)
+      setSelectedInscrito(inscrito)
     } catch (err) {
-      console.error("Error finding guest:", err)
-      setSelectedGuest(null)
-      alert("Convidado não encontrado ou QR code inválido")
+      console.error("Error finding inscrito:", err)
+      setSelectedInscrito(null)
+      alert("Inscrito não encontrado ou QR code inválido")
     }
   }
 
-  const handleSelectGuest = (guest: GuestWithConfirmation) => {
-    setSelectedGuest(guest)
+  const handleSelectInscrito = (inscrito: Inscrito) => {
+    setSelectedInscrito(inscrito)
     setViewMode("scanner")
   }
 
-  const handleAttendanceUpdate = (guestId: string, attended: boolean) => {
-    setAllGuests((prevGuests) => prevGuests.map((g) => (g.id === guestId ? { ...g, attended } : g)))
-    if (selectedGuest && selectedGuest.id === guestId) {
-      setSelectedGuest({ ...selectedGuest, attended })
+  const handleAttendanceUpdate = (inscritoId: string, attended: boolean) => {
+    setAllInscritos((prevInscritos) =>
+      prevInscritos.map((i) => (i.id === inscritoId ? { ...i, attended } : i)),
+    )
+    if (selectedInscrito && selectedInscrito.id === inscritoId) {
+      setSelectedInscrito({ ...selectedInscrito, attended })
     }
   }
 
   const handleReset = () => {
-    setSelectedGuest(null)
+    setSelectedInscrito(null)
     setScanKey((prev) => prev + 1)
   }
 
-  const getStatusBadge = (confirmation?: Confirmation) => {
-    if (!confirmation) {
-      return (
-        <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-300">
-          Pendente
-        </Badge>
-      )
+  const getCongressoBadge = (congresso: string) => {
+    const colors: Record<string, { bg: string; text: string }> = {
+      uti: { bg: "bg-blue-50", text: "text-blue-700" },
+      utipedneo: { bg: "bg-purple-50", text: "text-purple-700" },
     }
-    if (confirmation.status === "confirmed") {
-      return (
-        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-300">
-          Confirmado
-        </Badge>
-      )
+    const style = colors[congresso] || { bg: "bg-gray-50", text: "text-gray-700" }
+    const labels: Record<string, string> = {
+      uti: "UTI",
+      utipedneo: "UTI Ped e Neo",
     }
     return (
-      <Badge variant="outline" className="bg-red-50 text-red-700 border-red-300">
-        Não vai
+      <Badge variant="outline" className={`${style.bg} border-none ${style.text}`}>
+        {labels[congresso] || congresso}
       </Badge>
     )
   }
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent flex items-center justify-center p-4">
+      <div className="min-h-screen bg-linear-to-br from-primary/5 via-background to-accent flex items-center justify-center p-4">
         <Card className="w-full max-w-md p-8">
           <div className="flex justify-center mb-6">
             <div className="bg-primary/10 p-4 rounded-full">
               <Lock className="w-8 h-8 text-primary" />
             </div>
           </div>
-          <h1 className="text-2xl font-bold text-center mb-6">Identificador de Convidados</h1>
+          <h1 className="text-2xl font-bold text-center mb-6">Identificador de Inscritos</h1>
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
               <Input
@@ -207,11 +198,11 @@ export default function IdentificadorPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent p-3 md:p-4">
+    <div className="min-h-screen bg-linear-to-br from-primary/5 via-background to-accent p-3 md:p-4">
       <div className="container mx-auto max-w-6xl py-4 md:py-8">
-        <h1 className="text-2xl md:text-3xl font-bold text-center mb-6 md:mb-8">Identificador de Convidados</h1>
+        <h1 className="text-2xl md:text-3xl font-bold text-center mb-6 md:mb-8">Identificador de Inscritos</h1>
 
-        {!selectedGuest && (
+        {!selectedInscrito && (
           <div className="flex justify-center gap-2 mb-4 md:mb-6">
             <Button
               variant={viewMode === "scanner" ? "default" : "outline"}
@@ -228,13 +219,13 @@ export default function IdentificadorPage() {
               className="flex items-center gap-2 text-sm md:text-base"
             >
               <List className="w-4 h-4" />
-              <span className="hidden sm:inline">Lista de Convidados</span>
+              <span className="hidden sm:inline">Lista de Inscritos</span>
               <span className="sm:hidden">Lista</span>
             </Button>
           </div>
         )}
 
-        {!selectedGuest ? (
+        {!selectedInscrito ? (
           <>
             {viewMode === "scanner" ? (
               <QRScanner key={scanKey} onScanSuccess={handleScanSuccess} />
@@ -245,7 +236,7 @@ export default function IdentificadorPage() {
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                     <Input
                       type="text"
-                      placeholder="Buscar por nome do convidado ou acompanhante..."
+                      placeholder="Buscar por nome ou CPF..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       className="pl-10"
@@ -253,53 +244,43 @@ export default function IdentificadorPage() {
                   </div>
                 </div>
 
-                {loadingGuests ? (
-                  <div className="text-center py-8 text-muted-foreground">Carregando convidados...</div>
-                ) : filteredGuests.length === 0 ? (
+                {loadingInscritos ? (
+                  <div className="text-center py-8 text-muted-foreground">Carregando inscritos...</div>
+                ) : filteredInscritos.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
-                    {searchQuery ? "Nenhum convidado encontrado" : "Nenhum convidado cadastrado"}
+                    {searchQuery ? "Nenhum inscrito encontrado" : "Nenhum inscrito cadastrado"}
                   </div>
                 ) : (
-                  <div className="space-y-2 max-h-[600px] overflow-y-auto">
-                    {filteredGuests.map((guest) => (
+                  <div className="space-y-2 max-h-150 overflow-y-auto">
+                    {filteredInscritos.map((inscrito) => (
                       <div
-                        key={guest.id}
-                        onClick={() => handleSelectGuest(guest)}
+                        key={inscrito.id}
+                        onClick={() => handleSelectInscrito(inscrito)}
                         className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent cursor-pointer transition-colors"
                       >
-                        <div className="flex-1">
-                          <p className="font-semibold">{guest.name}</p>
-                          {guest.companion && (
-                            <p className="text-sm text-muted-foreground">Acompanhante: {guest.companion}</p>
-                          )}
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold">{inscrito.nome_completo}</p>
+                          <p className="text-sm text-muted-foreground">CPF: {inscrito.cpf}</p>
+                          <p className="text-xs text-muted-foreground">Modalidade: {inscrito.modalidade}</p>
                         </div>
-                        <div>{getStatusBadge(guest.confirmation)}</div>
+                        <div className="flex flex-col gap-2 ml-4 shrink-0">
+                          {getCongressoBadge(inscrito.congresso)}
+                        </div>
                       </div>
                     ))}
                   </div>
                 )}
 
                 <div className="mt-6 pt-6 border-t text-center text-sm text-muted-foreground">
-                  Total: {filteredGuests.length} convidado(s)
+                  Total: {filteredInscritos.length} inscrito(s)
                   {searchQuery && ` encontrado(s)`}
                 </div>
               </Card>
             )}
           </>
         ) : (
-          <GuestDisplay
-            guest={selectedGuest}
-            confirmation={
-              selectedGuest.confirmation
-                ? {
-                    guest_id: selectedGuest.id,
-                    status: selectedGuest.confirmation.status,
-                    guest_name: selectedGuest.name,
-                    confirmed_at: selectedGuest.confirmation.timestamp,
-                    created_at: selectedGuest.confirmation.timestamp,
-                  }
-                : null
-            }
+          <InscritoDisplay
+            inscrito={selectedInscrito}
             onReset={handleReset}
             onAttendanceUpdate={handleAttendanceUpdate}
           />
