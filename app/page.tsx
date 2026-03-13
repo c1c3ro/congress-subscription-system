@@ -437,6 +437,7 @@ export default function AdminPage() {
     if (filter === "parceiro") return inscricao.modalidade === "parceiro";
     if (filter === "nad") return inscricao.tipo_aluno === "nad";
     if (filter === "confirmados") return inscricao.escolhas && inscricao.escolhas.length > 0;
+    if (filter === "pendentes") return !inscricao.escolhas || inscricao.escolhas.length === 0;
     return true;
   });
 
@@ -533,7 +534,7 @@ export default function AdminPage() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-4 mb-8">
           <button
             onClick={() => setFilter("all")}
             className={`bg-card rounded-xl p-4 border transition-all text-left ${
@@ -604,6 +605,18 @@ export default function AdminPage() {
           >
             <p className="text-2xl font-bold text-foreground">{inscricoes.filter(i => i.escolhas && i.escolhas.length > 0).length}</p>
             <p className="text-xs text-muted-foreground">Confirmados</p>
+          </button>
+
+          <button
+            onClick={() => setFilter("pendentes")}
+            className={`bg-card rounded-xl p-4 border transition-all text-left ${
+              filter === "pendentes"
+                ? "border-primary ring-2 ring-primary/20"
+                : "border-border hover:border-primary/50"
+            }`}
+          >
+            <p className="text-2xl font-bold text-foreground">{inscricoes.filter(i => !i.escolhas || i.escolhas.length === 0).length}</p>
+            <p className="text-xs text-muted-foreground">Pendentes</p>
           </button>
 
         </div>
