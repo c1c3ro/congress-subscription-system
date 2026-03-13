@@ -27,6 +27,7 @@ interface Inscrito {
   }>
   created_at: string
   attended?: boolean
+  participa_noite_solene?: boolean
 }
 
 interface InscritoDisplayProps {
@@ -156,6 +157,37 @@ export default function InscritoDisplay({ inscrito, onReset, onAttendanceUpdate 
             </div>
           )}
 
+          {/* Informações do Congresso */}
+          <div className="bg-blue-50 rounded-lg p-4 md:p-6 border border-blue-200">
+            <h3 className="font-semibold text-base md:text-lg mb-4">Congresso</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <p className="text-xs md:text-sm text-muted-foreground mb-1">Congresso</p>
+                <p className="font-medium">{getCongressoLabel(inscrito.congresso)}</p>
+              </div>
+              <div>
+                <p className="text-xs md:text-sm text-muted-foreground mb-1">Área</p>
+                <p className="font-medium">{inscrito.area}</p>
+              </div>
+              <div>
+                <p className="text-xs md:text-sm text-muted-foreground mb-1">Modalidade</p>
+                <p className="font-medium">{getModalidadeLabel(inscrito.modalidade)}</p>
+              </div>
+              <div>
+                <p className="text-xs md:text-sm text-muted-foreground mb-1">Data de Inscrição</p>
+                <p className="font-medium">
+                  {format(new Date(inscrito.created_at), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs md:text-sm text-muted-foreground mb-1">Noite Solene</p>
+                <p className={`font-medium ${inscrito.participa_noite_solene ? "text-green-600" : "text-red-600"}`}>
+                  {inscrito.participa_noite_solene ? "✓ Participando" : "✗ Não Participando"}
+                </p>
+              </div>
+            </div>
+          </div>
+
           {/* Informações Pessoais */}
           <div className="bg-slate-50 rounded-lg p-4 md:p-6 border border-slate-200">
             <h3 className="font-semibold text-base md:text-lg mb-4">Informações Pessoais</h3>
@@ -179,30 +211,7 @@ export default function InscritoDisplay({ inscrito, onReset, onAttendanceUpdate 
             </div>
           </div>
 
-          {/* Informações do Congresso */}
-          <div className="bg-blue-50 rounded-lg p-4 md:p-6 border border-blue-200">
-            <h3 className="font-semibold text-base md:text-lg mb-4">Congresso</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <p className="text-xs md:text-sm text-muted-foreground mb-1">Congresso</p>
-                <p className="font-medium">{getCongressoLabel(inscrito.congresso)}</p>
-              </div>
-              <div>
-                <p className="text-xs md:text-sm text-muted-foreground mb-1">Área</p>
-                <p className="font-medium">{inscrito.area}</p>
-              </div>
-              <div>
-                <p className="text-xs md:text-sm text-muted-foreground mb-1">Modalidade</p>
-                <p className="font-medium">{getModalidadeLabel(inscrito.modalidade)}</p>
-              </div>
-              <div>
-                <p className="text-xs md:text-sm text-muted-foreground mb-1">Data de Inscrição</p>
-                <p className="font-medium">
-                  {format(new Date(inscrito.created_at), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
-                </p>
-              </div>
-            </div>
-          </div>
+
 
           {/* Comparecimento */}
           {/* <div

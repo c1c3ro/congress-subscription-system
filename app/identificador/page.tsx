@@ -29,6 +29,7 @@ interface Inscrito {
   }>
   created_at: string
   attended?: boolean
+  participa_noite_solene?: boolean
 }
 
 export default function IdentificadorPage() {
