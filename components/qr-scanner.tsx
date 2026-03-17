@@ -1,9 +1,10 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
-import { Html5Qrcode } from "html5-qrcode"
+import { useEffect, useRef, useState, useCallback } from "react"
+import { Html5Qrcode, Html5QrcodeScannerState } from "html5-qrcode"
 import { Card } from "@/components/ui/card"
-import { Camera } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Camera, RefreshCw } from "lucide-react"
 
 interface QRScannerProps {
   onScanSuccess: (decodedText: string) => void
@@ -11,105 +12,117 @@ interface QRScannerProps {
 
 export default function QRScanner({ onScanSuccess }: QRScannerProps) {
   const [isScanning, setIsScanning] = useState(false)
-  const scannerRef = useRef<Html5Qrcode | null>(null)
   const [error, setError] = useState("")
-  const isRunningRef = useRef(false)
-  const isMountedRef = useRef(true)
+  const [isInitializing, setIsInitializing] = useState(true)
+  const scannerRef = useRef<Html5Qrcode | null>(null)
+  const containerIdRef = useRef(`qr-reader-${Date.now()}`)
   const hasScannedRef = useRef(false)
-  const isInitializingRef = useRef(false)
+  const isMountedRef = useRef(true)
+
+  const stopScanner = useCallback(async () => {
+    if (scannerRef.current) {
+      try {
+        const state = scannerRef.current.getState()
+        if (state === Html5QrcodeScannerState.SCANNING || state === Html5QrcodeScannerState.PAUSED) {
+          await scannerRef.current.stop()
+        }
+      } catch (err) {
+        // Ignorar erros ao parar
+      }
+      scannerRef.current = null
+    }
+  }, [])
+
+  const startScanner = useCallback(async () => {
+    if (!isMountedRef.current) return
+
+    setIsInitializing(true)
+    setError("")
+    hasScannedRef.current = false
+
+    // Garantir que o scanner anterior foi parado
+    await stopScanner()
+
+    // Aguardar um pouco para o DOM atualizar
+    await new Promise(resolve => setTimeout(resolve, 100))
+
+    const containerId = containerIdRef.current
+    const container = document.getElementById(containerId)
+    
+    if (!container || !isMountedRef.current) {
+      setIsInitializing(false)
+      return
+    }
+
+    // Limpar o conteúdo do container
+    container.innerHTML = ""
+
+    try {
+      const scanner = new Html5Qrcode(containerId)
+      scannerRef.current = scanner
+
+      await scanner.start(
+        { facingMode: "environment" },
+        {
+          fps: 10,
+          qrbox: { width: 250, height: 250 },
+          aspectRatio: 1,
+        },
+        async (decodedText) => {
+          if (hasScannedRef.current || !isMountedRef.current) return
+          
+          hasScannedRef.current = true
+          console.log("[v0] QR Code detectado:", decodedText)
+
+          // Parar o scanner primeiro
+          try {
+            await scanner.stop()
+          } catch (e) {
+            // Ignorar erro ao parar
+          }
+          
+          if (isMountedRef.current) {
+            setIsScanning(false)
+            onScanSuccess(decodedText)
+          }
+        },
+        () => {
+          // Ignorar erros de scan contínuo (normal quando não há QR code visível)
+        }
+      )
+
+      if (isMountedRef.current) {
+        setIsScanning(true)
+        setIsInitializing(false)
+      }
+    } catch (err) {
+      console.error("[v0] Error starting scanner:", err)
+      if (isMountedRef.current) {
+        setError("Erro ao acessar a câmera. Verifique as permissões do navegador.")
+        setIsScanning(false)
+        setIsInitializing(false)
+      }
+    }
+  }, [onScanSuccess, stopScanner])
 
   useEffect(() => {
     isMountedRef.current = true
-    hasScannedRef.current = false
-    isInitializingRef.current = false
-
-    const startScanner = async () => {
-      if (isInitializingRef.current) return
-      isInitializingRef.current = true
-
-      try {
-        // Limpar scanner anterior se existir
-        if (scannerRef.current && isRunningRef.current) {
-          try {
-            const state = await scannerRef.current.getState()
-            if (state === 2 || state === 3) {
-              await scannerRef.current.stop()
-            }
-          } catch (e) {
-            console.error("Error stopping previous scanner:", e)
-          }
-        }
-
-        // Remove elemento anterior se existir
-        const existingReader = document.getElementById("qr-reader")
-        if (existingReader) {
-          existingReader.innerHTML = ""
-        }
-
-        const scanner = new Html5Qrcode("qr-reader")
-        scannerRef.current = scanner
-
-        await scanner.start(
-          { facingMode: "environment" },
-          {
-            fps: 10,
-            qrbox: { width: 250, height: 250 },
-          },
-          (decodedText) => {
-            if (hasScannedRef.current) {
-              return
-            }
-
-            hasScannedRef.current = true
-            console.log("QR Code detectado:", decodedText)
-
-            // Para o scanner e executa o callback
-            if (scanner && isRunningRef.current) {
-              scanner.stop().then(() => {
-                if (isMountedRef.current) {
-                  setIsScanning(false)
-                  onScanSuccess(decodedText)
-                }
-              }).catch((err) => {
-                console.error("Error stopping scanner:", err)
-                if (isMountedRef.current) {
-                  onScanSuccess(decodedText)
-                }
-              })
-            }
-          },
-          (errorMessage) => {
-            // Ignorar erros de scan contínuo
-          },
-        )
-
-        isRunningRef.current = true
-        if (isMountedRef.current) {
-          setIsScanning(true)
-          setError("")
-        }
-      } catch (err) {
-        console.error("Error starting scanner:", err)
-        if (isMountedRef.current) {
-          setError("Erro ao acessar a câmera. Verifique as permissões.")
-          setIsScanning(false)
-        }
-      } finally {
-        isInitializingRef.current = false
-      }
-    }
-
-    startScanner()
+    
+    // Iniciar scanner após um pequeno delay para garantir que o DOM está pronto
+    const timer = setTimeout(() => {
+      startScanner()
+    }, 200)
 
     return () => {
       isMountedRef.current = false
-      if (scannerRef.current && isRunningRef.current) {
-        scannerRef.current.stop().catch((err) => {
-          console.error("Error cleaning up scanner:", err)
-        })
-      }
+      clearTimeout(timer)
+      stopScanner()
     }
-  }, [onScanSuccess])
+  }, [startScanner, stopScanner])
+
+  const handleRetry = () => {
+    startScanner()
+  }
 
   return (
     <Card className="p-6">
@@ -123,12 +136,41 @@ export default function QRScanner({ onScanSuccess }: QRScannerProps) {
         <p className="text-sm text-muted-foreground">Posicione o QR code dentro da área de leitura</p>
       </div>
 
-      {error && <div className="bg-destructive/10 text-destructive px-4 py-3 rounded-lg mb-4 text-sm">{error}</div>}
+      {error && (
+        <div className="bg-destructive/10 text-destructive px-4 py-3 rounded-lg mb-4 text-sm">
+          <p>{error}</p>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="mt-2"
+            onClick={handleRetry}
+          >
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Tentar novamente
+          </Button>
+        </div>
+      )}
 
-      <div id="qr-reader" className="rounded-lg overflow-hidden border-2 border-primary/20" style={{ minHeight: "300px" }} />
+      {isInitializing && !error && (
+        <div className="flex items-center justify-center py-8 text-muted-foreground">
+          <RefreshCw className="w-5 h-5 mr-2 animate-spin" />
+          Iniciando câmera...
+        </div>
+      )}
+
+      <div 
+        id={containerIdRef.current} 
+        className="rounded-lg overflow-hidden border-2 border-primary/20 [&>video]:!w-full [&>video]:!max-w-full"
+        style={{ 
+          minHeight: isScanning ? "300px" : "0px",
+          display: isInitializing && !error ? "none" : "block"
+        }} 
+      />
 
       {isScanning && (
-        <p className="text-center text-sm text-muted-foreground mt-4">Câmera ativa - aguardando QR code...</p>
+        <p className="text-center text-sm text-muted-foreground mt-4">
+          Câmera ativa - aguardando QR code...
+        </p>
       )}
     </Card>
   )

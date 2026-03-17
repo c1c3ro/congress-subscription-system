@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo, useCallback, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
@@ -102,10 +102,18 @@ export default function IdentificadorPage() {
     }
   }
 
-  const handleScanSuccess = async (decodedText: string) => {
+  // Ref para acessar inscritos no callback sem causar re-render
+  const allInscritosRef = useRef<Inscrito[]>([])
+  
+  // Manter ref atualizada
+  useEffect(() => {
+    allInscritosRef.current = allInscritos
+  }, [allInscritos])
+
+  const handleScanSuccess = useCallback((decodedText: string) => {
     try {
       const rawtextId = decodedText.trim()
-      console.log("[Scanner] QR Code lido com sucesso:", rawtextId)
+      console.log("[v0] QR Code lido com sucesso:", rawtextId)
 
       // Remove espaços em branco
       let inscritoId = rawtextId.replace(/\s+/g, "")
@@ -115,37 +123,44 @@ export default function IdentificadorPage() {
         try {
           const url = new URL(rawtextId)
           inscritoId = url.pathname.split("/").filter(Boolean).pop() || inscritoId
-          console.log("[Scanner] ID extraído da URL:", inscritoId)
+          console.log("[v0] ID extraído da URL:", inscritoId)
         } catch {
           // Se não for URL válida, usa como está
           inscritoId = rawtextId.trim()
         }
       }
 
-      console.log("[Scanner] Procurando por ID:", inscritoId)
-      console.log("[Scanner] Total de inscritos disponíveis:", allInscritos.length)
+      const currentInscritos = allInscritosRef.current
+      console.log("[v0] Procurando por ID:", inscritoId)
+      console.log("[v0] Total de inscritos disponíveis:", currentInscritos.length)
 
       // Busca exata por ID
-      let inscrito = allInscritos.find((i) => i.id === inscritoId)
+      let inscrito = currentInscritos.find((i) => i.id === inscritoId)
+
+      // Se não encontrou, tenta busca parcial (caso o QR code tenha sido lido com caracteres extras)
+      if (!inscrito && inscritoId.length > 10) {
+        inscrito = currentInscritos.find((i) => 
+          inscritoId.includes(i.id) || i.id.includes(inscritoId)
+        )
+      }
 
       if (!inscrito) {
-        console.log(
-          "[Scanner] IDs disponíveis:",
-          allInscritos.map((i) => i.id),
-        )
+        console.log("[v0] IDs disponíveis (primeiros 5):", currentInscritos.slice(0, 5).map((i) => i.id))
         throw new Error(`Inscrito com ID "${inscritoId}" não encontrado`)
       }
 
-      console.log("[Scanner] Inscrito encontrado:", inscrito.nome_completo)
+      console.log("[v0] Inscrito encontrado:", inscrito.nome_completo)
       setSelectedInscrito(inscrito)
     } catch (err) {
-      console.error("[Scanner] Erro:", err instanceof Error ? err.message : String(err))
+      console.error("[v0] Erro:", err instanceof Error ? err.message : String(err))
       setSelectedInscrito(null)
       alert(
         `Erro ao processar QR code: ${err instanceof Error ? err.message : "QR code inválido"}`,
       )
+      // Reinicia o scanner após erro
+      setScanKey((prev) => prev + 1)
     }
-  }
+  }, [])
 
   const handleSelectInscrito = (inscrito: Inscrito) => {
     setSelectedInscrito(inscrito)
@@ -160,6 +175,12 @@ export default function IdentificadorPage() {
       setSelectedInscrito({ ...selectedInscrito, attended })
     }
   }
+
+  useEffect(() => {
+    if (selectedInscrito) {
+      window.scrollTo({ top: 0, behavior: "smooth" })
+    }
+  }, [selectedInscrito])
 
   const handleReset = () => {
     setSelectedInscrito(null)
@@ -244,7 +265,26 @@ export default function IdentificadorPage() {
         {!selectedInscrito ? (
           <>
             {viewMode === "scanner" ? (
-              <QRScanner key={scanKey} onScanSuccess={handleScanSuccess} />
+              loadingInscritos ? (
+                <Card className="p-6">
+                  <div className="text-center py-12">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                    <p className="text-muted-foreground">Carregando dados dos inscritos...</p>
+                    <p className="text-sm text-muted-foreground mt-2">Aguarde antes de escanear</p>
+                  </div>
+                </Card>
+              ) : allInscritos.length === 0 ? (
+                <Card className="p-6">
+                  <div className="text-center py-12">
+                    <p className="text-muted-foreground mb-4">Nenhum inscrito cadastrado no sistema.</p>
+                    <Button onClick={loadAllInscritos} variant="outline">
+                      Recarregar dados
+                    </Button>
+                  </div>
+                </Card>
+              ) : (
+                <QRScanner key={scanKey} onScanSuccess={handleScanSuccess} />
+              )
             ) : (
               <Card className="p-6">
                 <div className="mb-6">
@@ -292,7 +332,8 @@ export default function IdentificadorPage() {
                   {searchQuery && ` encontrado(s)`}
                 </div>
               </Card>
-            )}
+            )
+            }
           </>
         ) : (
           <InscritoDisplay
