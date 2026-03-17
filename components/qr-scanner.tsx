@@ -16,23 +16,34 @@ export default function QRScanner({ onScanSuccess }: QRScannerProps) {
   const isRunningRef = useRef(false)
   const isMountedRef = useRef(true)
   const hasScannedRef = useRef(false)
-  const isStoppingRef = useRef(false)
+  const isInitializingRef = useRef(false)
 
   useEffect(() => {
     isMountedRef.current = true
     hasScannedRef.current = false
+    isInitializingRef.current = false
 
     const startScanner = async () => {
+      if (isInitializingRef.current) return
+      isInitializingRef.current = true
+
       try {
-        if (scannerRef.current) {
+        // Limpar scanner anterior se existir
+        if (scannerRef.current && isRunningRef.current) {
           try {
-            if (isRunningRef.current && !isStoppingRef.current) {
-              await stopScanner()
+            const state = await scannerRef.current.getState()
+            if (state === 2 || state === 3) {
+              await scannerRef.current.stop()
             }
           } catch (e) {
-            // Silently handle cleanup errors
+            console.error("Error stopping previous scanner:", e)
           }
-          scannerRef.current = null
+        }
+
+        // Remove elemento anterior se existir
+        const existingReader = document.getElementById("qr-reader")
+        if (existingReader) {
+          existingReader.innerHTML = ""
         }
 
         const scanner = new Html5Qrcode("qr-reader")
@@ -50,12 +61,22 @@ export default function QRScanner({ onScanSuccess }: QRScannerProps) {
             }
 
             hasScannedRef.current = true
+            console.log("QR Code detectado:", decodedText)
 
-            stopScanner().then(() => {
-              if (isMountedRef.current) {
-                onScanSuccess(decodedText)
-              }
-            })
+            // Para o scanner e executa o callback
+            if (scanner && isRunningRef.current) {
+              scanner.stop().then(() => {
+                if (isMountedRef.current) {
+                  setIsScanning(false)
+                  onScanSuccess(decodedText)
+                }
+              }).catch((err) => {
+                console.error("Error stopping scanner:", err)
+                if (isMountedRef.current) {
+                  onScanSuccess(decodedText)
+                }
+              })
+            }
           },
           (errorMessage) => {
             // Ignorar erros de scan contínuo
@@ -65,37 +86,16 @@ export default function QRScanner({ onScanSuccess }: QRScannerProps) {
         isRunningRef.current = true
         if (isMountedRef.current) {
           setIsScanning(true)
+          setError("")
         }
       } catch (err) {
         console.error("Error starting scanner:", err)
         if (isMountedRef.current) {
           setError("Erro ao acessar a câmera. Verifique as permissões.")
+          setIsScanning(false)
         }
-      }
-    }
-
-    const stopScanner = async () => {
-      if (!scannerRef.current || !isRunningRef.current || isStoppingRef.current) {
-        return
-      }
-
-      isStoppingRef.current = true
-
-      try {
-        const state = await scannerRef.current.getState()
-
-        // Only stop if scanner is actually running or paused
-        if (state === 2 || state === 3) {
-          // 2 = SCANNING, 3 = PAUSED
-          await scannerRef.current.stop()
-        }
-
-        isRunningRef.current = false
-      } catch (err) {
-        // Silently handle stop errors - scanner might already be stopped
-        isRunningRef.current = false
       } finally {
-        isStoppingRef.current = false
+        isInitializingRef.current = false
       }
     }
 
@@ -104,7 +104,9 @@ export default function QRScanner({ onScanSuccess }: QRScannerProps) {
     return () => {
       isMountedRef.current = false
       if (scannerRef.current && isRunningRef.current) {
-        stopScanner()
+        scannerRef.current.stop().catch((err) => {
+          console.error("Error cleaning up scanner:", err)
+        })
       }
     }
   }, [onScanSuccess])
@@ -117,13 +119,13 @@ export default function QRScanner({ onScanSuccess }: QRScannerProps) {
             <Camera className="w-8 h-8 text-primary" />
           </div>
         </div>
-        <h2 className="text-xl font-semibold mb-2">Escaneie o QR Code do Convidado</h2>
+        <h2 className="text-xl font-semibold mb-2">Escaneie o QR Code do Inscrito</h2>
         <p className="text-sm text-muted-foreground">Posicione o QR code dentro da área de leitura</p>
       </div>
 
       {error && <div className="bg-destructive/10 text-destructive px-4 py-3 rounded-lg mb-4 text-sm">{error}</div>}
 
-      <div id="qr-reader" className="rounded-lg overflow-hidden border-2 border-primary/20" />
+      <div id="qr-reader" className="rounded-lg overflow-hidden border-2 border-primary/20" style={{ minHeight: "300px" }} />
 
       {isScanning && (
         <p className="text-center text-sm text-muted-foreground mt-4">Câmera ativa - aguardando QR code...</p>

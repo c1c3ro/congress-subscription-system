@@ -21,12 +21,15 @@ interface Inscricao {
   modalidade: string;
   hospital_parceiro: string | null;
   status_pagamento: string | null;
+  quantidade_workshops: number;
   participa_noite_solene: boolean;
   created_at: string;
-  escolha: {
-    workshop: string | null;
-    participa_temas_livres: boolean;
-  } | null;
+  escolhas: Array<{
+    workshop: {
+      id: string;
+      titulo: string;
+    } | null;
+  }> | null;
 }
 
 interface Workshop {
@@ -37,7 +40,7 @@ interface Workshop {
 }
 
 interface Stats {
-  total: number;
+  total: number; 
   estudantes: number;
   profissionais: number;
   parceiros: number;
@@ -61,7 +64,6 @@ export default function AdminPage() {
   const [error, setError] = useState("");
   const [inscricoes, setInscricoes] = useState<Inscricao[]>([]);
   const [workshops, setWorkshops] = useState<Workshop[]>([]);
-  const [temasLivresTotal, setTemasLivresTotal] = useState(0);
   const [stats, setStats] = useState<Stats>({
     total: 0,
     estudantes: 0,
@@ -75,6 +77,8 @@ export default function AdminPage() {
   const [editingInscricaoId, setEditingInscricaoId] = useState<string | null>(null);
   const [editingPaymentValue, setEditingPaymentValue] = useState<string>("");
   const [editingNoiteSoleneId, setEditingNoiteSoleneId] = useState<string | null>(null);
+  const [editingQuantidadeWorkshopsId, setEditingQuantidadeWorkshopsId] = useState<string | null>(null);
+  const [editingQuantidadeWorkshopsValue, setEditingQuantidadeWorkshopsValue] = useState<number>(1);
   const [noiteSoleneCounter, setNoiteSoleneCounter] = useState({ total_confirmados: 0, limite_vagas: 150 });
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -113,13 +117,6 @@ export default function AdminPage() {
 
       setInscricoes(inscricaoData.inscricoes || []);
       setWorkshops(inscricaoData.workshops || []);
-
-      const qtdTemasLivres = (inscricaoData.inscricoes || []).filter(
-        (inscrito: Inscricao) => inscrito.escolha?.participa_temas_livres === true
-      ).length;
-      
-      setTemasLivresTotal(qtdTemasLivres);
-      
       setNoiteSoleneCounter(soleneData);
       setStats(inscricaoData.stats || {
         total: 0,
@@ -229,6 +226,39 @@ export default function AdminPage() {
       alert("Erro ao atualizar Noite Solene: " + String(error));
     } finally {
       setEditingNoiteSoleneId(null);
+    }
+  }
+
+  const handleOpenQuantidadeWorkshopsDropdown = (inscricao: Inscricao) => {
+    setEditingQuantidadeWorkshopsId(inscricao.id);
+    setEditingQuantidadeWorkshopsValue(inscricao.quantidade_workshops);
+  };
+
+  const handleSaveQuantidadeWorkshops = async (inscricaoId: string) => {
+    try {
+      console.log("[v0] Alterando Quantidade de Workshops:", { id: inscricaoId, value: editingQuantidadeWorkshopsValue });
+      
+      const response = await fetch(`/api/inscricoes/${inscricaoId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ quantidade_workshops: editingQuantidadeWorkshopsValue }),
+      });
+
+      const responseData = await response.json();
+      console.log("[v0] Resposta do servidor:", { status: response.status, data: responseData });
+
+      if (response.ok && selectedCongresso) {
+        console.log("[v0] Atualização bem-sucedida, recarregando dados");
+        await loadData(selectedCongresso);
+      } else {
+        console.error("[v0] Erro na resposta:", responseData);
+        alert("Erro ao atualizar Quantidade de Workshops: " + (responseData.error || "desconhecido"));
+      }
+    } catch (error) {
+      console.error("[v0] Erro na requisição:", error);
+      alert("Erro ao atualizar Quantidade de Workshops: " + String(error));
+    } finally {
+      setEditingQuantidadeWorkshopsId(null);
     }
   }
 
@@ -371,7 +401,7 @@ export default function AdminPage() {
               >
                 <div className="flex justify-center mb-4">
                   <Image
-                    src="/logo-uti-ped-neo.webp"
+                    src="/logo-uti-pedneo.webp"
                     alt="III Congresso de UTI Pediátrica e Neonatal"
                     width={200}
                     height={120}
@@ -406,6 +436,8 @@ export default function AdminPage() {
     if (filter === "profissional") return inscricao.modalidade === "profissional";
     if (filter === "parceiro") return inscricao.modalidade === "parceiro";
     if (filter === "nad") return inscricao.tipo_aluno === "nad";
+    if (filter === "confirmados") return inscricao.escolhas && inscricao.escolhas.length > 0;
+    if (filter === "pendentes") return !inscricao.escolhas || inscricao.escolhas.length === 0;
     return true;
   });
 
@@ -423,7 +455,7 @@ export default function AdminPage() {
         <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
           <div className="flex items-center gap-4">
             <Image
-              src={selectedCongresso === "uti" ? "/logo-uti-adulto.webp" : "/logo-uti-ped-neo.webp"}
+              src={selectedCongresso === "uti" ? "/logo-uti-adulto.webp" : "/logo-uti-pedneo.webp"}
               alt={congressoNames[selectedCongresso]}
               width={150}
               height={100}
@@ -502,7 +534,7 @@ export default function AdminPage() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-4 mb-8">
           <button
             onClick={() => setFilter("all")}
             className={`bg-card rounded-xl p-4 border transition-all text-left ${
@@ -563,34 +595,47 @@ export default function AdminPage() {
             <p className="text-xs text-muted-foreground">Alunos NAD</p>
           </button>
 
+          <button
+            onClick={() => setFilter("confirmados")}
+            className={`bg-card rounded-xl p-4 border transition-all text-left ${
+              filter === "confirmados"
+                ? "border-primary ring-2 ring-primary/20"
+                : "border-border hover:border-primary/50"
+            }`}
+          >
+            <p className="text-2xl font-bold text-foreground">{inscricoes.filter(i => i.escolhas && i.escolhas.length > 0).length}</p>
+            <p className="text-xs text-muted-foreground">Confirmados</p>
+          </button>
+
+          <button
+            onClick={() => setFilter("pendentes")}
+            className={`bg-card rounded-xl p-4 border transition-all text-left ${
+              filter === "pendentes"
+                ? "border-primary ring-2 ring-primary/20"
+                : "border-border hover:border-primary/50"
+            }`}
+          >
+            <p className="text-2xl font-bold text-foreground">{inscricoes.filter(i => !i.escolhas || i.escolhas.length === 0).length}</p>
+            <p className="text-xs text-muted-foreground">Pendentes</p>
+          </button>
+
         </div>
 
-        {/* Workshops e Temas Livres Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-          <div className="bg-card rounded-xl p-4 border border-border">
-            <h3 className="text-sm font-semibold text-foreground mb-3">Workshops</h3>
-            <div className="space-y-2">
-              {workshops.map((workshop) => (
-                <div key={workshop.id} className="flex justify-between items-center text-sm">
-                  <span className="text-muted-foreground truncate mr-2">{workshop.titulo}</span>
-                  <span className="font-medium text-foreground whitespace-nowrap">
-                    {workshop.vagas_ocupadas}/{workshop.vagas_total}
-                  </span>
-                </div>
-              ))}
-              {workshops.length === 0 && (
-                <p className="text-sm text-muted-foreground">Nenhum workshop cadastrado</p>
-              )}
-            </div>
-          </div>
-          <div className="bg-card rounded-xl p-4 border border-border">
-            <h3 className="text-sm font-semibold text-foreground mb-3">Temas Livres</h3>
-            <div className="flex items-center gap-4">
-              <div className="flex-1">
-                <p className="text-2xl font-bold text-foreground">{temasLivresTotal}</p>
-                <p className="text-xs text-muted-foreground">Participantes</p>
+        {/* Workshops Stats */}
+        <div className="bg-card rounded-xl p-4 border border-border mb-8">
+          <h3 className="text-sm font-semibold text-foreground mb-3">Workshops</h3>
+          <div className="space-y-2">
+            {workshops.map((workshop) => (
+              <div key={workshop.id} className="flex justify-between items-center text-sm">
+                <span className="text-muted-foreground truncate mr-2">{workshop.titulo}</span>
+                <span className="font-medium text-foreground whitespace-nowrap">
+                  {workshop.vagas_ocupadas}/{workshop.vagas_total}
+                </span>
               </div>
-            </div>
+            ))}
+            {workshops.length === 0 && (
+              <p className="text-sm text-muted-foreground">Nenhum workshop cadastrado</p>
+            )}
           </div>
         </div>
 
@@ -652,15 +697,16 @@ export default function AdminPage() {
                   <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Inscrito</th>
                   <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Modalidade</th>
                   <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider text-center">Confirmação</th>
-                  <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Status Pagamento</th>
+                  <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider text-center">Status Pagamento</th>
                   <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider text-center">Noite Solene</th>
+                  <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider text-center">Quantidade Workshops</th>
                   <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider text-right">Ações</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
                 {filteredInscricoes.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-4 py-12 text-center text-muted-foreground">
+                    <td colSpan={7} className="px-4 py-12 text-center text-muted-foreground">
                       Nenhuma inscrição encontrada
                     </td>
                   </tr>
@@ -695,8 +741,8 @@ export default function AdminPage() {
 
                         {/* Nova Coluna: Confirmação */}
                         <td className="px-4 py-4 text-center">
-                          <span className={`text-sm font-bold ${inscrito.escolha?.workshop ? 'text-green-600' : 'text-red-500'}`}>
-                            {inscrito.escolha?.workshop ? 'Sim' : 'Não'}
+                          <span className={`text-sm font-bold ${inscrito.escolhas && inscrito.escolhas.length > 0 ? 'text-green-600' : 'text-red-500'}`}>
+                            {inscrito.escolhas && inscrito.escolhas.length > 0 ? 'Sim' : 'Não'}
                           </span>
                         </td>
 
@@ -748,6 +794,31 @@ export default function AdminPage() {
                           </button>
                         </td>
 
+                        {/* Workshops Adicionais */}
+                        <td className="px-4 py-4 text-center" onClick={(e) => e.stopPropagation()}>
+                          {editingQuantidadeWorkshopsId === inscrito.id ? (
+                            <select
+                              value={editingQuantidadeWorkshopsValue}
+                              onChange={(e) => setEditingQuantidadeWorkshopsValue(Number(e.target.value))}
+                              onBlur={() => handleSaveQuantidadeWorkshops(inscrito.id)}
+                              autoFocus
+                              className="px-2 py-1 rounded border border-border bg-background text-foreground text-sm"
+                            >
+                              <option value={1}>Apenas inclusos (1)</option>
+                              <option value={2}>1 Inclusos + 1 adicional (2)</option>
+                              <option value={3}>1 Inclusos + 2 adicionais (3)</option>
+                            </select>
+                          ) : (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleOpenQuantidadeWorkshopsDropdown(inscrito); }}
+                              className="px-3 py-1 rounded-md bg-muted hover:bg-muted/80 transition-colors cursor-pointer text-sm font-medium"
+                              title="Clique para editar a quantidade de workshops"
+                            >
+                              {inscrito.quantidade_workshops} max
+                            </button>
+                          )}
+                        </td>
+
                         {/* Ações */}
                         <td className="px-4 py-4 text-right" onClick={(e) => e.stopPropagation()}>
                           <button 
@@ -762,7 +833,7 @@ export default function AdminPage() {
                       {/* Área Detalhada */}
                       {expandedId === inscrito.id && (
                         <tr className="bg-muted/20">
-                          <td colSpan={6} className="px-8 py-6 border-b border-border">
+                          <td colSpan={7} className="px-8 py-6 border-b border-border">
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                               <div className="space-y-2">
                                 <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Contato</h4>
@@ -776,8 +847,18 @@ export default function AdminPage() {
                               </div>
                               <div className="space-y-2">
                                 <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Preferências</h4>
-                                <p className="text-sm text-foreground"><strong>Workshop:</strong> {inscrito.escolha?.workshop || "Nenhum"}</p>
-                                <p className="text-sm text-foreground"><strong>Temas Livres:</strong> {inscrito.escolha?.participa_temas_livres ? "Sim" : "Não"}</p>
+                                <div className="text-sm text-foreground">
+                                  <strong>Workshops:</strong>
+                                  {inscrito.escolhas && inscrito.escolhas.length > 0 ? (
+                                    <ul className="ml-4 mt-1">
+                                      {inscrito.escolhas.map((escolha, idx) => (
+                                        <li key={idx}>• {escolha.workshop?.titulo || "Workshop inválido"}</li>
+                                      ))}
+                                    </ul>
+                                  ) : (
+                                    <p>Nenhum selecionado</p>
+                                  )}
+                                </div>
                               </div>
                             </div>
                           </td>
