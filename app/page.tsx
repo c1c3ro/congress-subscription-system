@@ -79,7 +79,7 @@ export default function AdminPage() {
   const [editingNoiteSoleneId, setEditingNoiteSoleneId] = useState<string | null>(null);
   const [editingQuantidadeWorkshopsId, setEditingQuantidadeWorkshopsId] = useState<string | null>(null);
   const [editingQuantidadeWorkshopsValue, setEditingQuantidadeWorkshopsValue] = useState<number>(1);
-  const [noiteSoleneCounter, setNoiteSoleneCounter] = useState({ total_confirmados: 0, limite_vagas: 150 });
+  const [noiteSoleneCounter, setNoiteSoleneCounter] = useState({ total_confirmados: 0, limite_vagas: 75, congresso: "" });
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -109,7 +109,7 @@ export default function AdminPage() {
     try {
       const [inscricaoResponse, soleneResponse] = await Promise.all([
         fetch(`/api/inscricoes?congresso=${congresso}`),
-        fetch(`/api/noite-solene`),
+        fetch(`/api/noite-solene?congresso=${congresso}`),
       ]);
 
       const inscricaoData = await inscricaoResponse.json();
@@ -644,13 +644,20 @@ export default function AdminPage() {
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div>
               <h3 className="text-lg font-semibold text-foreground mb-2">Noite Solene</h3>
-              <p className="text-sm text-muted-foreground">Primeiras 150 inscrições confirmadas</p>
+              <p className="text-sm text-muted-foreground">
+                Primeiras {noiteSoleneCounter.limite_vagas} inscrições confirmadas
+                {selectedCongresso && (
+                  <span className="ml-1 font-medium text-purple-600">
+                    — {congressoShortNames[selectedCongresso]}
+                  </span>
+                )}
+              </p>
             </div>
             <div className="text-center">
               <p className="text-3xl font-bold text-purple-600">{noiteSoleneCounter.total_confirmados}</p>
               <p className="text-sm text-muted-foreground">de {noiteSoleneCounter.limite_vagas} vagas</p>
               {noiteSoleneCounter.total_confirmados >= noiteSoleneCounter.limite_vagas && (
-                <p className="text-xs text-pink-600 font-semibold mt-2">✓ COMPLETO</p>
+                <p className="text-xs text-pink-600 font-semibold mt-2">COMPLETO</p>
               )}
             </div>
           </div>
