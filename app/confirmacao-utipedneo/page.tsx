@@ -283,7 +283,7 @@ export default function ConfirmacaoPage() {
         const soleneResponse = await fetch("/api/noite-solene", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ inscrito_id: inscrito.id }),
+          body: JSON.stringify({ inscrito_id: inscrito.id, congresso: CONGRESSO }),
         });
         const soleneData = await soleneResponse.json();
         setNoiteSoleneInfo(soleneData);

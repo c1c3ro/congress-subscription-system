@@ -1,37 +1,39 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { NextResponse } from "next/server";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const congresso = searchParams.get("congresso");
+
     const supabase = createAdminClient();
 
-    // Buscar todos os registros de noite_solene_counter
-    const { data: counters, error } = await supabase
-      .from("noite_solene_counter")
-      .select("*");
-
-    if (error) {
-      console.error("[v0] Erro ao buscar contador:", error);
+    if (!congresso) {
       return NextResponse.json(
-        { error: "Erro ao buscar contador" },
-        { status: 500 }
+        { error: "Congresso não fornecido" },
+        { status: 400 }
       );
     }
 
-    if (!counters || counters.length === 0) {
-      return NextResponse.json({
-        total_confirmados: 0,
-        limite_vagas: 150,
-      });
+    // Buscar o contador do congresso específico
+    const { data: counter, error } = await supabase
+      .from("noite_solene_counter")
+      .select("*")
+      .eq("congresso", congresso)
+      .single();
+
+    if (error || !counter) {
+      console.error("[v0] Erro ao buscar contador:", error);
+      return NextResponse.json(
+        { error: "Contador não encontrado" },
+        { status: 404 }
+      );
     }
 
-    // Somar total confirmados de todos os registros
-    const totalConfirmados = counters.reduce((sum, counter) => sum + (counter.total_confirmados || 0), 0);
-    const limiteVagas = counters[0]?.limite_vagas || 150;
-
     return NextResponse.json({
-      total_confirmados: totalConfirmados,
-      limite_vagas: limiteVagas,
+      total_confirmados: counter.total_confirmados || 0,
+      limite_vagas: counter.limite_vagas || 75,
+      congresso: counter.congresso,
     });
   } catch (error) {
     console.error("[v0] Erro:", error);
@@ -44,15 +46,24 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const { inscrito_id } = await request.json();
+    const { inscrito_id, congresso } = await request.json();
     const supabase = createAdminClient();
 
-    // Buscar todos os contadores
-    const { data: counters, error: fetchError } = await supabase
-      .from("noite_solene_counter")
-      .select("*");
+    if (!congresso) {
+      return NextResponse.json(
+        { error: "Congresso não fornecido" },
+        { status: 400 }
+      );
+    }
 
-    if (fetchError || !counters || counters.length === 0) {
+    // Buscar o contador do congresso específico
+    const { data: current, error: fetchError } = await supabase
+      .from("noite_solene_counter")
+      .select("*")
+      .eq("congresso", congresso)
+      .single();
+
+    if (fetchError || !current) {
       console.error("[v0] Erro ao buscar contador:", fetchError);
       return NextResponse.json(
         { error: "Contador não encontrado" },
@@ -60,12 +71,11 @@ export async function POST(request: Request) {
       );
     }
 
-    // Usar o primeiro registro como principal
-    const current = counters[0];
     const novoTotal = current.total_confirmados + 1;
-    const pode_participar = novoTotal <= current.limite_vagas;
+    const limiteVagas = current.limite_vagas || 75;
+    const pode_participar = novoTotal <= limiteVagas;
 
-    // Atualizar apenas o primeiro registro
+    // Atualizar o contador do congresso específico
     const { error: counterError } = await supabase
       .from("noite_solene_counter")
       .update({ total_confirmados: novoTotal })
@@ -93,9 +103,10 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       total_confirmados: novoTotal,
-      limite_vagas: current.limite_vagas,
+      limite_vagas: limiteVagas,
       pode_participar,
-      vagas_restantes: Math.max(0, current.limite_vagas - novoTotal),
+      vagas_restantes: Math.max(0, limiteVagas - novoTotal),
+      congresso,
     });
   } catch (error) {
     console.error("[v0] Erro:", error);
