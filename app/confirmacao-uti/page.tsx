@@ -28,7 +28,7 @@ interface Workshop {
   vagas_total: number;
   vagas_ocupadas: number;
   vagas_disponiveis: number;
-  tipo: "inclusos" | "adicionais";
+  tipo: string;
   order: number;
   slot: number;
 }
@@ -163,27 +163,10 @@ export default function ConfirmacaoPage() {
     }
   };
 
-  // Validar se pode selecionar um workshop
+  // Validar se pode selecionar um workshop (apenas limite total, sem restrição de tipo)
   const podeSelecionar = (workshop: Workshop): boolean => {
     if (selectedWorkshops.has(workshop.id)) return true; // Já selecionado
-
-    const totalSelecionados = selectedWorkshops.size;
-    const selecionadosInclusos = Array.from(selectedWorkshops).filter((id) => {
-      const w = workshopsAgrupados
-        .flatMap((g) => g.workshops)
-        .find((w) => w.id === id);
-      return w?.tipo === "inclusos";
-    }).length;
-    const selecionadosAdicionais = totalSelecionados - selecionadosInclusos;
-
-    // Validar tipo e quantidade
-    if (workshop.tipo === "inclusos") {
-      // Podem ter no máximo 1 workshop inclusos
-      return selecionadosInclusos < 1;
-    } else {
-      // Podem ter no máximo quantidade_workshops - 1 adicionais
-      return selecionadosAdicionais < ((inscrito?.quantidade_workshops || 1) - 1);
-    }
+    return selectedWorkshops.size < (inscrito?.quantidade_workshops || 1);
   };
 
   // Checar se pode selecionar pela restrição de horário
@@ -220,9 +203,9 @@ export default function ConfirmacaoPage() {
     if (novasSelecoes.has(workshopId)) {
       novasSelecoes.delete(workshopId);
     } else {
-      // Validar se pode adicionar
+      // Validar limite total
       if (!podeSelecionar(workshop)) {
-        setError(`Você já selecionou o máximo de workshops ${workshop.tipo}.`);
+        setError(`Você já selecionou o máximo de ${inscrito?.quantidade_workshops || 1} workshop(s).`);
         setTimeout(() => setError(""), 3000);
         return;
       }
@@ -242,16 +225,8 @@ export default function ConfirmacaoPage() {
   const handleConfirmarEscolhas = async () => {
     if (!inscrito) return;
 
-    // Validar que tem pelo menos 1 inclusos
-    const selecionadosInclusos = Array.from(selectedWorkshops).filter((id) => {
-      const w = workshopsAgrupados
-        .flatMap((g) => g.workshops)
-        .find((w) => w.id === id);
-      return w?.tipo === "inclusos";
-    }).length;
-
-    if (selecionadosInclusos === 0) {
-      setError("Você precisa selecionar pelo menos 1 workshop inclusos.");
+    if (selectedWorkshops.size === 0) {
+      setError("Você precisa selecionar pelo menos 1 workshop.");
       return;
     }
 
@@ -300,20 +275,7 @@ export default function ConfirmacaoPage() {
     }
   };
 
-  // Calcular disponibilidade de seleções
-  const usedSelections = () => {
-    const inclusos = Array.from(selectedWorkshops).filter((id) => {
-      const w = workshopsAgrupados
-        .flatMap((g) => g.workshops)
-        .find((w) => w.id === id);
-      return w?.tipo === "inclusos";
-    }).length;
-    const adicionais = selectedWorkshops.size - inclusos;
-    return { inclusos, adicionais };
-  };
-
-  const selections = usedSelections();
-  const maxAdicionais = (inscrito?.quantidade_workshops || 1) - 1;
+  const maxWorkshops = inscrito?.quantidade_workshops || 1;
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-green-50 to-white flex items-center justify-center p-4">
@@ -385,14 +347,13 @@ export default function ConfirmacaoPage() {
 
               {/* Resumo de seleções */}
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <p className="text-sm font-semibold text-blue-900 mb-2">Suas opções:</p>
-                <ul className="text-sm text-blue-800 space-y-1">
-                  <li>• <strong>1 workshop incluso</strong> (obrigatório)</li>
-                  <li>• <strong>Até {maxAdicionais} workshop(s) adicional(is)</strong></li>
-                  <li className="text-xs text-blue-700 mt-2">
-                    ✓ Selecionados: {selections.inclusos}/1 incluso, {selections.adicionais}/{maxAdicionais} adicionais
-                  </li>
-                </ul>
+                <p className="text-sm font-semibold text-blue-900 mb-1">Suas opções:</p>
+                <p className="text-sm text-blue-800">
+                  Selecione até <strong>{maxWorkshops} workshop(s)</strong>
+                </p>
+                <p className="text-xs text-blue-700 mt-2">
+                  Selecionados: {selectedWorkshops.size}/{maxWorkshops}
+                </p>
               </div>
 
               {/* Workshops agrupados por horário */}
@@ -416,7 +377,7 @@ export default function ConfirmacaoPage() {
                         } else if (temConflito) {
                           titleAttr = "Você já selecionou um workshop neste horário";
                         } else if (!podeAdicionar && selectedWorkshops.size > 0) {
-                          titleAttr = "Você atingiu o limite de workshops deste tipo";
+                          titleAttr = "Você atingiu o limite de workshops";
                         }
 
                         return (
@@ -438,28 +399,19 @@ export default function ConfirmacaoPage() {
                             `}
                           >
                             <div className="flex justify-between items-center">
-                              <div className="flex-1">
-                                <div className="flex items-center gap-2">
+                                <div className="flex-1">
                                   <p className={`font-medium ${esgotado ? "text-gray-500" : "text-foreground"}`}>
                                     {workshop.titulo}
                                   </p>
-                                  <span className={`text-xs px-2 py-1 rounded ${
-                                    workshop.tipo === "inclusos"
-                                      ? "bg-green-100 text-green-700"
-                                      : "bg-amber-100 text-amber-700"
-                                  }`}>
-                                    {workshop.tipo === "inclusos" ? "Incluso" : "Adicional"}
-                                  </span>
+                                  {esgotado && (
+                                    <p className="text-sm text-gray-400 mt-1">VAGAS ENCERRADAS</p>
+                                  )}
+                                  {!esgotado && (
+                                    <p className="text-xs text-muted-foreground mt-1">
+                                      {workshop.vagas_disponiveis} vagas disponíveis
+                                    </p>
+                                  )}
                                 </div>
-                                {esgotado && (
-                                  <p className="text-sm text-gray-400 mt-1">VAGAS ENCERRADAS</p>
-                                )}
-                                {!esgotado && (
-                                  <p className="text-xs text-muted-foreground mt-1">
-                                    {workshop.vagas_disponiveis} vagas disponíveis
-                                  </p>
-                                )}
-                              </div>
                               {selecionado && !esgotado && (
                                 <div className="w-5 h-5 rounded-full bg-[#1a7d11] flex items-center justify-center shrink-0">
                                   <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -482,7 +434,7 @@ export default function ConfirmacaoPage() {
 
               <Button
                 onClick={handleConfirmarEscolhas}
-                disabled={loading || selections.inclusos === 0}
+                disabled={loading || selectedWorkshops.size === 0}
                 className="w-full bg-[#7D1128] hover:bg-[#5D0D1E] text-white"
               >
                 {loading ? "Confirmando..." : "Confirmar Escolhas"}
