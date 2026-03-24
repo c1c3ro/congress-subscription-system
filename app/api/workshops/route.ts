@@ -73,14 +73,8 @@ export async function GET(request: Request) {
     );
   }
 
-  // Filtrar workshops conforme seleção de adicionais
-  // Sempre mostra workshops inclusos, mas mostra adicionais apenas se o usuário tem direito
+  // Buscar todos os workshops do congresso sem filtro por tipo
   let workshopsFiltrados = workshops;
-  if (inscrito.quantidade_workshops === 1) {
-    // Se quantidade_workshops = 1, mostra apenas workshops inclusos
-    workshopsFiltrados = workshops.filter((w) => w.tipo === 'inclusos');
-  }
-  // Se quantidade_workshops > 1, mostra todos
 
   // Contar vagas ocupadas por workshop
   const workshopsComVagas = await Promise.all(
@@ -173,26 +167,15 @@ export async function POST(request: Request) {
     );
   }
 
-  // Validar seleções
-  const selecionadosInclusos = workshopsData.filter((w) => w.tipo === 'inclusos').length;
-  const selecionadosAdicionais = workshopsData.filter((w) => w.tipo === 'adicionais').length;
-
-  if (selecionadosInclusos !== 1) {
+  // Validar quantidade máxima
+  if (workshop_ids.length > inscrito.quantidade_workshops) {
     return NextResponse.json(
-      { error: "Você deve selecionar exatamente 1 workshop inclusos" },
+      { error: `Você só pode selecionar até ${inscrito.quantidade_workshops} workshop(s)` },
       { status: 400 }
     );
   }
 
-  const maxAdicionais = inscrito.quantidade_workshops - 1;
-  if (selecionadosAdicionais > maxAdicionais) {
-    return NextResponse.json(
-      { error: `Você só pode selecionar até ${maxAdicionais} workshop(s) adicional(is)` },
-      { status: 400 }
-    );
-  }
-
-  // Validar conflitos de horário - não pode ter múltiplos workshops no mesmo slot (independente do tipo)
+  // Validar conflitos de horário
   const slots: Record<string, string> = {}; // formato: "slot" => workshop_id
   for (const workshop of workshopsData) {
     const slot = Math.floor(workshop.order / 3);

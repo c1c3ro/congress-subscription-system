@@ -349,7 +349,7 @@ export default function ConfirmacaoPage() {
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <p className="text-sm font-semibold text-blue-900 mb-1">Suas opções:</p>
                 <p className="text-sm text-blue-800">
-                  Selecione até <strong>{maxWorkshops} workshop(s)</strong> — sem conflito de horário
+                  Selecione até <strong>{maxWorkshops} workshop(s)</strong>
                 </p>
                 <p className="text-xs text-blue-700 mt-2">
                   Selecionados: {selectedWorkshops.size}/{maxWorkshops}
