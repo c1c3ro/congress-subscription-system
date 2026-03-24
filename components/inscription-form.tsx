@@ -330,9 +330,9 @@ export function InscriptionForm({ congresso, congressoNome }: InscriptionFormPro
         </label>
         <div className="space-y-2">
           {[
-            { value: 1, label: "1 Workshop (1 incluso)" },
-            { value: 2, label: "2 Workshops (1 incluso + 1 adicional)" },
-            { value: 3, label: "3 Workshops (1 incluso + 2 adicionais)" },
+            { value: 1, label: "1 Workshop" },
+            { value: 2, label: "2 Workshops" },
+            { value: 3, label: "3 Workshops" },
           ].map((option) => (
             <label key={option.value} className="flex items-center gap-3 cursor-pointer">
               <input

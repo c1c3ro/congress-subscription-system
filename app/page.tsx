@@ -811,9 +811,9 @@ export default function AdminPage() {
                               autoFocus
                               className="px-2 py-1 rounded border border-border bg-background text-foreground text-sm"
                             >
-                              <option value={1}>Apenas inclusos (1)</option>
-                              <option value={2}>1 Inclusos + 1 adicional (2)</option>
-                              <option value={3}>1 Inclusos + 2 adicionais (3)</option>
+                              <option value={1}>1 workshop</option>
+                              <option value={2}>2 workshops</option>
+                              <option value={3}>3 workshops</option>
                             </select>
                           ) : (
                             <button
