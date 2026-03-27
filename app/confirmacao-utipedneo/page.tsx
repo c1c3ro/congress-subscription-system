@@ -519,7 +519,7 @@ export default function ConfirmacaoPage() {
               <div className="space-y-2">
                 {inscrito?.numero_sorteio && (
                   <div className="flex justify-center">
-                    <p className="text-4xl font-bold text-[#E11D48]">
+                    <p className="font-bold text-[#E11D48] text-2xl text-accent-foreground">
                       {String(inscrito.numero_sorteio).padStart(3, '0')}
                     </p>
                   </div>
