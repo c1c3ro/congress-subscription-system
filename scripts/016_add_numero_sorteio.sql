@@ -8,13 +8,15 @@ WHERE numero_sorteio IS NOT NULL;
 
 -- Atribuir números aos inscritos já confirmados (que já escolheram workshops, por ordem de created_at)
 -- UTI: 1 a 200
-WITH uti_numerados AS (
+WITH uti_com_workshops AS (
+  SELECT DISTINCT i.id, i.created_at
+  FROM inscricoes i
+  INNER JOIN escolhas_inscrito ei ON i.id = ei.inscrito_id
+  WHERE i.congresso = 'uti' AND i.numero_sorteio IS NULL
+),
+uti_numerados AS (
   SELECT id, ROW_NUMBER() OVER (ORDER BY created_at) as num
-  FROM inscricoes
-  WHERE congresso = 'uti' 
-    AND workshops_escolhidos IS NOT NULL 
-    AND array_length(workshops_escolhidos, 1) > 0
-    AND numero_sorteio IS NULL
+  FROM uti_com_workshops
 )
 UPDATE inscricoes
 SET numero_sorteio = uti_numerados.num
@@ -22,13 +24,15 @@ FROM uti_numerados
 WHERE inscricoes.id = uti_numerados.id;
 
 -- UTI Ped/Neo: 201 a 400
-WITH pedneo_numerados AS (
+WITH pedneo_com_workshops AS (
+  SELECT DISTINCT i.id, i.created_at
+  FROM inscricoes i
+  INNER JOIN escolhas_inscrito ei ON i.id = ei.inscrito_id
+  WHERE i.congresso = 'utipedneo' AND i.numero_sorteio IS NULL
+),
+pedneo_numerados AS (
   SELECT id, ROW_NUMBER() OVER (ORDER BY created_at) + 200 as num
-  FROM inscricoes
-  WHERE congresso = 'utipedneo' 
-    AND workshops_escolhidos IS NOT NULL 
-    AND array_length(workshops_escolhidos, 1) > 0
-    AND numero_sorteio IS NULL
+  FROM pedneo_com_workshops
 )
 UPDATE inscricoes
 SET numero_sorteio = pedneo_numerados.num

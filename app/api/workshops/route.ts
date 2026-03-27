@@ -218,6 +218,32 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: insertError.message }, { status: 500 });
   }
 
+  // Atribuir número de sorteio ao inscrito
+  let numero_sorteio = null;
+  if (!inscrito.numero_sorteio) {
+    // Contar quantos inscritos já confirmados há neste congresso
+    const { data: confirmedCount } = await supabase
+      .from("inscricoes")
+      .select("id")
+      .eq("congresso", inscrito.congresso)
+      .not("numero_sorteio", "is", null);
+
+    const baseNumber = inscrito.congresso === "uti" ? 0 : 200;
+    numero_sorteio = (confirmedCount?.length || 0) + 1 + baseNumber;
+
+    // Atualizar o inscrito com o número de sorteio
+    const { error: updateError } = await supabase
+      .from("inscricoes")
+      .update({ numero_sorteio })
+      .eq("id", inscrito_id);
+
+    if (updateError) {
+      console.error("[v0] Erro ao atualizar numero_sorteio:", updateError);
+    }
+  } else {
+    numero_sorteio = inscrito.numero_sorteio;
+  }
+
   // Buscar as escolhas criadas com os dados dos workshops
   const { data: novasEscolhas, error: selectError } = await supabase
     .from("escolhas_inscrito")
@@ -230,6 +256,7 @@ export async function POST(request: Request) {
 
   return NextResponse.json({
     success: true,
+    numero_sorteio,
     escolha: {
       id: inscrito_id,
       workshop_ids: workshop_ids,

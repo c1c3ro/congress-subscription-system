@@ -47,6 +47,7 @@ interface Inscrito {
   congresso: string;
   participa_noite_solene: boolean;
   quantidade_workshops: number;
+  numero_sorteio?: number | null;
 }
 
 interface Escolha {
@@ -249,6 +250,11 @@ export default function ConfirmacaoPage() {
         setError(data.error || "Erro ao confirmar escolhas");
         setLoading(false);
         return;
+      }
+
+      // Atualizar inscrito com o número de sorteio
+      if (data.numero_sorteio && inscrito) {
+        setInscrito({ ...inscrito, numero_sorteio: data.numero_sorteio });
       }
 
       setEscolhaConfirmada(data.escolha);
@@ -511,6 +517,13 @@ export default function ConfirmacaoPage() {
               )}
 
               <div className="space-y-2">
+                {inscrito?.numero_sorteio && (
+                  <div className="flex justify-center">
+                    <p className="text-4xl font-bold text-[#E11D48]">
+                      {String(inscrito.numero_sorteio).padStart(3, '0')}
+                    </p>
+                  </div>
+                )}
                 <p className="text-sm text-muted-foreground">
                   Apresente este QR Code na entrada do evento:
                 </p>
