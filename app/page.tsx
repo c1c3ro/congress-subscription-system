@@ -4,6 +4,8 @@ import React from "react"
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
+import Link from "next/link";
+import { Layers } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 type Congresso = "uti" | "utipedneo";
@@ -506,15 +508,11 @@ export default function AdminPage() {
               Ir para {congressoShortNames[selectedCongresso === "uti" ? "utipedneo" : "uti"]}
             </Button>
 
-            <Button
-              onClick={() => setSelectedCongresso(null)}
-              variant="outline"
-              className="flex items-center gap-2"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-              Menu
+            <Button asChild variant="outline" className="flex items-center gap-2">
+              <Link href="/workshops">
+                <Layers className="w-4 h-4" />
+                Workshops
+              </Link>
             </Button>
 
             <Button
