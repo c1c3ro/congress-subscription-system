@@ -33,6 +33,7 @@ export default function WorkshopsPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [isLoadingData, setIsLoadingData] = useState(false)
   const [workshops, setWorkshops] = useState<WorkshopData[]>([])
+  const [selectedCongresso, setSelectedCongresso] = useState("all")
   const [openWorkshopId, setOpenWorkshopId] = useState<string | null>(null)
 
   useEffect(() => {
@@ -89,6 +90,9 @@ export default function WorkshopsPage() {
     }
   }
 
+  const congressoOptions = ["all", ...Array.from(new Set(workshops.map((workshop) => workshop.congresso)))]
+  const filteredWorkshops = selectedCongresso === "all" ? workshops : workshops.filter((workshop) => workshop.congresso === selectedCongresso)
+
   const toggleWorkshop = (id: string) => {
     setOpenWorkshopId((current) => (current === id ? null : id))
   }
@@ -133,13 +137,32 @@ export default function WorkshopsPage() {
                 Clique em cada workshop para ver a lista de inscritos até o momento.
               </p>
             </div>
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-              <span className="rounded-full bg-secondary/10 px-3 py-1 text-sm text-secondary">
-                Total de workshops: {workshops.length}
-              </span>
-              <Button type="button" variant="outline" onClick={fetchWorkshopsData} disabled={isLoadingData}>
-                Atualizar
-              </Button>
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                <label className="text-sm text-muted-foreground flex items-center gap-2">
+                  <span>Filtrar por congresso</span>
+                  <select
+                    value={selectedCongresso}
+                    onChange={(event) => setSelectedCongresso(event.target.value)}
+                    className="rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  >
+                    {congressoOptions.map((congresso) => (
+                      <option key={congresso} value={congresso}>
+                        {congresso === "all" ? "Todos" : congresso}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                <span className="rounded-full bg-secondary/10 px-3 py-1 text-sm text-secondary">
+                  Total de workshops: {filteredWorkshops.length}
+                </span>
+                <Button type="button" variant="outline" onClick={fetchWorkshopsData} disabled={isLoadingData}>
+                  Atualizar
+                </Button>
+              </div>
             </div>
           </div>
         </div>
@@ -148,13 +171,13 @@ export default function WorkshopsPage() {
           <div className="rounded-3xl border border-border bg-card p-6 text-center text-base text-muted-foreground">
             Carregando workshops...
           </div>
-        ) : workshops.length === 0 ? (
+        ) : filteredWorkshops.length === 0 ? (
           <div className="rounded-3xl border border-border bg-card p-6 text-center text-base text-muted-foreground">
-            Nenhum workshop encontrado.
+            Nenhum workshop encontrado para o filtro selecionado.
           </div>
         ) : (
           <div className="space-y-4">
-            {workshops.map((workshop) => {
+            {filteredWorkshops.map((workshop) => {
               const isOpen = openWorkshopId === workshop.id
               return (
                 <div key={workshop.id} className="overflow-hidden rounded-3xl border border-border bg-card shadow-sm">
