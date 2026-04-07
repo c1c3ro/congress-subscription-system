@@ -24,16 +24,6 @@ export async function PATCH(
 
     if (error) throw error;
 
-    if (data.participa_noite_solene !== undefined) {
-      const { data: counters } = await supabase.from("noite_solene_counter").select("*").limit(1);
-      if (counters && counters.length > 0) {
-        const counter = counters[0];
-        const change = data.participa_noite_solene ? 1 : -1;
-        const finalTotal = Math.max(0, (counter.total_confirmados || 0) + change);
-        await supabase.from("noite_solene_counter").update({ total_confirmados: finalTotal }).eq("id", counter.id);
-      }
-    }
-
     return NextResponse.json({ success: true, data: result });
   } catch (error) {
     return NextResponse.json({ error: "Erro ao atualizar" }, { status: 500 });

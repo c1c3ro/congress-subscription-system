@@ -75,20 +75,6 @@ export async function POST(request: Request) {
     const limiteVagas = current.limite_vagas || 75;
     const pode_participar = novoTotal <= limiteVagas;
 
-    // Atualizar o contador do congresso específico
-    const { error: counterError } = await supabase
-      .from("noite_solene_counter")
-      .update({ total_confirmados: novoTotal })
-      .eq("id", current.id);
-
-    if (counterError) {
-      console.error("[v0] Erro ao atualizar contador:", counterError);
-      return NextResponse.json(
-        { error: "Erro ao atualizar contador" },
-        { status: 500 }
-      );
-    }
-
     // Marcar inscrito como participante da Noite Solene se pode participar
     if (pode_participar && inscrito_id) {
       const { error: inscricaoError } = await supabase
