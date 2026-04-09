@@ -844,6 +844,8 @@ export default function AdminPage() {
                                 <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Contato</h4>
                                 <p className="text-sm text-foreground"><strong>E-mail:</strong> {inscrito.email}</p>
                                 <p className="text-sm text-foreground"><strong>Telefone:</strong> {formatPhone(inscrito.telefone)}</p>
+                                <p className="text-sm text-foreground inline-block"><strong>Data de Inscrição: </strong></p>
+                                <p className="text-sm text-foreground inline-block ml-1"> {new Date(inscrito.created_at).toLocaleString('pt-BR')}</p>
                               </div>
                               <div className="space-y-2">
                                 <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Acadêmico</h4>
