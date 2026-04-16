@@ -26,11 +26,13 @@ export async function GET() {
       if (!escolhasMap.has(e.inscrito_id)) {
         escolhasMap.set(e.inscrito_id, [])
       }
-      escolhasMap.get(e.inscrito_id).push({
-        id: e.workshops.id,
-        titulo: e.workshops.titulo,
-        congresso: e.workshops.congresso,
-      })
+      if (e.workshops) {
+        escolhasMap.get(e.inscrito_id).push({
+          id: e.workshops.id,
+          titulo: e.workshops.titulo,
+          congresso: e.workshops.congresso,
+        })
+      }
     })
 
     // Adicionar escolhas aos inscritos
