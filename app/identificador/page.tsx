@@ -66,14 +66,90 @@ export default function IdentificadorPage() {
     }
   }
 
-  const filteredInscritos = useMemo(() => {
-    if (!searchQuery.trim()) return allInscritos
+  const normalizeForSearch = (value: string) =>
+    value
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .trim()
 
-    const query = searchQuery.toLowerCase()
-    return allInscritos.filter(
-      (inscrito) =>
-        inscrito.nome_completo.toLowerCase().includes(query) || inscrito.cpf.includes(query),
-    )
+  const levenshteinWithin = (a: string, b: string, maxDist: number) => {
+    // Early exits
+    if (a === b) return true
+    const alen = a.length
+    const blen = b.length
+    if (alen === 0) return blen <= maxDist
+    if (blen === 0) return alen <= maxDist
+    if (Math.abs(alen - blen) > maxDist) return false
+
+    // Standard DP with banded early-exit for maxDist (small: 1–2)
+    const prev = new Array(blen + 1)
+    const curr = new Array(blen + 1)
+    for (let j = 0; j <= blen; j++) prev[j] = j
+
+    for (let i = 1; i <= alen; i++) {
+      curr[0] = i
+      let rowMin = curr[0]
+      const ai = a.charCodeAt(i - 1)
+
+      // Optional band limits (keeps it fast for maxDist small)
+      const start = Math.max(1, i - maxDist - 1)
+      const end = Math.min(blen, i + maxDist + 1)
+
+      for (let j = 1; j <= blen; j++) {
+        if (j < start || j > end) {
+          curr[j] = maxDist + 1
+          continue
+        }
+        const cost = ai === b.charCodeAt(j - 1) ? 0 : 1
+        const del = prev[j] + 1
+        const ins = curr[j - 1] + 1
+        const sub = prev[j - 1] + cost
+        const v = Math.min(del, ins, sub)
+        curr[j] = v
+        if (v < rowMin) rowMin = v
+      }
+
+      if (rowMin > maxDist) return false
+      for (let j = 0; j <= blen; j++) prev[j] = curr[j]
+    }
+
+    return prev[blen] <= maxDist
+  }
+
+  const matchesName = (rawQuery: string, rawName: string) => {
+    const q = normalizeForSearch(rawQuery)
+    if (!q) return true
+
+    const name = normalizeForSearch(rawName)
+    if (name.includes(q)) return true // fast path (accent-insensitive substring)
+
+    // Fuzzy: tolerate 1–2 typos per term
+    const qParts = q.split(/\s+/).filter(Boolean)
+    const nameParts = name.split(/\s+/).filter(Boolean)
+    const maxDist = q.length <= 4 ? 1 : 2
+
+    return qParts.every((qp) => {
+      if (qp.length <= 2) return name.includes(qp) // too short for Levenshtein
+      // Compare against each name token (and also a prefix to handle missing tail)
+      return nameParts.some((np) => {
+        if (np.includes(qp)) return true
+        const prefix = np.slice(0, Math.max(qp.length, Math.min(np.length, qp.length + 1)))
+        return levenshteinWithin(qp, np, maxDist) || levenshteinWithin(qp, prefix, maxDist)
+      })
+    })
+  }
+
+  const filteredInscritos = useMemo(() => {
+    const raw = searchQuery.trim()
+    if (!raw) return allInscritos
+
+    const cpfQuery = raw.replace(/\D/g, "")
+    return allInscritos.filter((inscrito) => {
+      const cpfMatch = cpfQuery ? inscrito.cpf.includes(cpfQuery) : false
+      const nameMatch = matchesName(raw, inscrito.nome_completo)
+      return cpfMatch || nameMatch
+    })
   }, [allInscritos, searchQuery])
 
   const handleLogin = async (e: React.FormEvent) => {

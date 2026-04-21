@@ -3,7 +3,7 @@
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { User, CheckCircle2, Clock, RotateCcw, Users } from "lucide-react"
+import { User, CheckCircle2, Clock, RotateCcw, Users, MoonStar, Sparkles } from "lucide-react"
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import { useState } from "react"
@@ -132,30 +132,97 @@ export default function InscritoDisplay({ inscrito, onReset, onAttendanceUpdate 
 
         <div className="space-y-3 md:space-y-4">
 
-        {/* Workshops */}
-          {inscrito.workshops.length > 0 && (
-            <div className="bg-purple-50 rounded-lg p-4 md:p-6 border border-purple-200">
-              <h3 className="font-semibold text-base md:text-lg mb-4">
-                <span className="flex items-center gap-2">
-                  <Users className="w-5 h-5" />
-                  Workshops ({inscrito.workshops.length})
-                </span>
-              </h3>
-              <div className="space-y-2">
-                {inscrito.workshops.map((workshop) => (
-                  <div
-                    key={workshop.id}
-                    className="bg-purple-100 rounded p-3 flex items-center justify-between"
-                  >
-                    <p className="font-medium text-sm md:text-base">{workshop.titulo}</p>
-                    {/* <Badge variant="secondary" className="text-xs">
-                      {workshop.congresso}
-                    </Badge> */}
+          {/* Destaques */}
+          <div className="rounded-lg border bg-linear-to-br from-background via-background to-accent/30 p-4 md:p-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-4">
+              {/* Workshops */}
+              <div className="bg-purple-50 rounded-lg p-4 md:p-5 border border-purple-200">
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  <div>
+                    <p className="font-semibold text-base md:text-lg flex items-center gap-2">
+                      <Users className="w-5 h-5" />
+                      Workshops
+                    </p>
+                    <p className="text-xs md:text-sm text-muted-foreground mt-1">
+                      Selecionados: <span className="font-medium text-foreground">{inscrito.workshops.length}</span>{" "}
+                      {typeof inscrito.quantidade_workshops === "number" && (
+                        <>
+                          / <span className="font-medium text-foreground">{inscrito.quantidade_workshops}</span>
+                        </>
+                      )}
+                    </p>
                   </div>
-                ))}
+                  <Badge
+                    variant="outline"
+                    className={`shrink-0 ${
+                      inscrito.workshops.length > 0
+                        ? "bg-purple-100 text-purple-800 border-purple-300"
+                        : "bg-white text-purple-800 border-purple-200"
+                    }`}
+                  >
+                    {inscrito.workshops.length > 0 ? "OK" : "Pendente"}
+                  </Badge>
+                </div>
+
+                {inscrito.workshops.length > 0 ? (
+                  <div className="space-y-2">
+                    {inscrito.workshops.map((workshop) => (
+                      <div key={workshop.id} className="bg-purple-100 rounded p-3">
+                        <p className="font-semibold text-sm md:text-base leading-snug">{workshop.titulo}</p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="bg-white/70 rounded p-3 border border-purple-200">
+                    <p className="text-sm md:text-base font-medium text-purple-900">Nenhum workshop selecionado</p>
+                    <p className="text-xs md:text-sm text-muted-foreground mt-1">
+                      Selecione até {inscrito.quantidade_workshops} workshop(s) na etapa de escolhas.
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Noite Solene */}
+              <div className="bg-amber-50 rounded-lg p-4 md:p-5 border border-amber-200">
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  <div>
+                    <p className="font-semibold text-base md:text-lg flex items-center gap-2">
+                      <MoonStar className="w-5 h-5" />
+                      Noite Solene
+                    </p>
+                    <p className="text-xs md:text-sm text-muted-foreground mt-1">Participação do inscrito</p>
+                  </div>
+                  <Badge
+                    variant="outline"
+                    className={`shrink-0 ${
+                      inscrito.participa_noite_solene
+                        ? "bg-emerald-100 text-emerald-800 border-emerald-300"
+                        : "bg-rose-100 text-rose-800 border-rose-300"
+                    }`}
+                  >
+                    {inscrito.participa_noite_solene ? "SIM" : "NÃO"}
+                  </Badge>
+                </div>
+
+                <div
+                  className={`rounded-lg p-4 border-2 ${
+                    inscrito.participa_noite_solene
+                      ? "bg-white/70 border-emerald-400"
+                      : "bg-white/70 border-rose-300"
+                  }`}
+                >
+                  <p className="text-sm md:text-base text-muted-foreground">Status</p>
+                  <p
+                    className={`mt-1 text-lg md:text-xl font-bold ${
+                      inscrito.participa_noite_solene ? "text-emerald-700" : "text-rose-700"
+                    }`}
+                  >
+                    {inscrito.participa_noite_solene ? "Participando" : "Não participando"}
+                  </p>
+                </div>
               </div>
             </div>
-          )}
+          </div>
 
           {/* Informações do Congresso */}
           <div className="bg-blue-50 rounded-lg p-4 md:p-6 border border-blue-200">
@@ -177,12 +244,6 @@ export default function InscritoDisplay({ inscrito, onReset, onAttendanceUpdate 
                 <p className="text-xs md:text-sm text-muted-foreground mb-1">Data de Inscrição</p>
                 <p className="font-medium">
                   {format(new Date(inscrito.created_at), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs md:text-sm text-muted-foreground mb-1">Noite Solene</p>
-                <p className={`font-medium ${inscrito.participa_noite_solene ? "text-green-600" : "text-red-600"}`}>
-                  {inscrito.participa_noite_solene ? "✓ Participando" : "✗ Não Participando"}
                 </p>
               </div>
             </div>
