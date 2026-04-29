@@ -49,7 +49,7 @@ export default function InscritoDisplay({ inscrito, onReset, onAttendanceUpdate 
       const response = await fetch("/api/attendance", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ guestId: inscrito.id, attended: newAttendedValue, type: "inscrito" }),
+        body: JSON.stringify({ inscritoId: inscrito.id, attended: newAttendedValue }),
       })
 
       if (!response.ok) throw new Error("Erro ao atualizar")

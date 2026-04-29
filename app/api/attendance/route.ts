@@ -3,18 +3,20 @@ import { createClient } from "@/lib/supabase/server"
 
 export async function POST(request: Request) {
   try {
-    const { guestId, attended, type = "guest" } = await request.json()
+    const { inscritoId, attended } = await request.json()
 
-    if (!guestId || typeof attended !== "boolean") {
+    if (!inscritoId || typeof attended !== "boolean") {
       return NextResponse.json({ error: "Dados inválidos" }, { status: 400 })
     }
 
     const supabase = await createClient()
 
-    // Determine which table to update based on type
-    const table = type === "inscrito" ? "inscricoes" : "guests"
-
-    const { data, error } = await supabase.from(table).update({ attended }).eq("id", guestId).select().single()
+    const { data, error } = await supabase
+      .from("inscricoes")
+      .update({ attended })
+      .eq("id", inscritoId)
+      .select()
+      .single()
 
     if (error) throw error
 

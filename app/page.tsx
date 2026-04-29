@@ -343,6 +343,9 @@ export default function AdminPage() {
             </div>
 
             <div className="mt-6 pt-6 border-t border-border">
+              <Button asChild variant="outline" className="w-full mb-3">
+                <Link href="/identificador">Ir para o Identificador</Link>
+              </Button>
               <Button
                 onClick={handleLogout}
                 variant="outline"

@@ -1,11 +1,19 @@
 -- Script para limpar todas as tabelas
 -- ATENÇÃO: Este script apaga todos os dados!
 
--- Remover todas as confirmações
-DELETE FROM confirmations;
+-- Ordem importa por conta de chaves estrangeiras
 
--- Remover todos os convidados
-DELETE FROM guests;
+-- Remover escolhas (dependem de inscricoes/workshops)
+DELETE FROM escolhas_inscrito;
 
--- Resetar contadores (opcional)
--- Se necessário, você pode adicionar comandos para resetar sequences
+-- Remover workshops/temas livres
+DELETE FROM workshops;
+DELETE FROM temas_livres;
+
+-- Remover inscrições
+DELETE FROM inscricoes;
+
+-- Remover contador da Noite Solene
+DELETE FROM noite_solene_counter;
+
+-- Se necessário, adicione aqui reset de sequences/contadores
