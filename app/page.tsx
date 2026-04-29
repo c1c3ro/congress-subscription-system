@@ -2,7 +2,7 @@
 
 import React from "react"
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Layers } from "lucide-react";
@@ -60,10 +60,7 @@ const congressoShortNames: Record<Congresso, string> = {
 };
 
 export default function AdminPage() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [selectedCongresso, setSelectedCongresso] = useState<Congresso | null>(null);
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
   const [inscricoes, setInscricoes] = useState<Inscricao[]>([]);
   const [workshops, setWorkshops] = useState<Workshop[]>([]);
   const [stats, setStats] = useState<Stats>({
@@ -83,27 +80,11 @@ export default function AdminPage() {
   const [editingQuantidadeWorkshopsValue, setEditingQuantidadeWorkshopsValue] = useState<number>(1);
   const [noiteSoleneCounter, setNoiteSoleneCounter] = useState({ total_confirmados: 0, limite_vagas: 75, congresso: "" });
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError("")
-    setIsLoading(true)
-
+  const handleLogout = async () => {
     try {
-      const response = await fetch("/api/admin/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password }),
-      })
-
-      if (response.ok) {
-        setIsAuthenticated(true);
-      } else {
-        setError("Senha incorreta")
-      }
-    } catch (error) {
-      setError("Erro ao autenticar")
+      await fetch("/api/admin/logout", { method: "POST" })
     } finally {
-      setIsLoading(false)
+      window.location.href = "/login"
     }
   }
 
@@ -300,61 +281,6 @@ export default function AdminPage() {
 
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  // Tela de Login
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-secondary/10 via-background to-muted flex items-center justify-center p-4">
-        <div className="w-full max-w-md">
-          <div className="flex justify-center mb-8">
-            <Image
-              src="/logo.webp"
-              alt="Núcleo de Carreira em Saúde"
-              width={300}
-              height={90}
-              className="w-full max-w-xs"
-            />
-          </div>
-
-          <div className="bg-card rounded-2xl shadow-xl p-8 border border-border">
-            <h1 className="text-2xl font-bold text-foreground mb-2 text-center">Painel Administrativo</h1>
-            <p className="text-muted-foreground text-center mb-6 text-sm">Digite a senha para acessar</p>
-
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div>
-                <label htmlFor="password" className="block text-sm font-medium text-foreground mb-2">
-                  Senha
-                </label>
-                <input
-                  type="password"
-                  id="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                  placeholder="Digite a senha"
-                  required
-                />
-              </div>
-
-              {error && (
-                <div className="bg-destructive/10 border border-destructive/20 text-destructive px-4 py-3 rounded-lg text-sm">
-                  {error}
-                </div>
-              )}
-
-              <Button
-                type="submit"
-                disabled={isLoading}
-                className="w-full bg-secondary hover:bg-secondary/90 text-secondary-foreground"
-              >
-                {isLoading ? "Entrando..." : "Entrar"}
-              </Button>
-            </form>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
   // Tela de Seleção de Congresso
   if (!selectedCongresso) {
     return (
@@ -418,7 +344,7 @@ export default function AdminPage() {
 
             <div className="mt-6 pt-6 border-t border-border">
               <Button
-                onClick={() => setIsAuthenticated(false)}
+                onClick={handleLogout}
                 variant="outline"
                 className="w-full"
               >
@@ -517,8 +443,7 @@ export default function AdminPage() {
 
             <Button
               onClick={() => {
-                setIsAuthenticated(false);
-                setSelectedCongresso(null);
+                handleLogout()
               }}
               variant="outline"
               className="flex items-center gap-2 text-destructive hover:text-destructive"

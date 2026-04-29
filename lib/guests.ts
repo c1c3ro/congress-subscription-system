@@ -27,6 +27,3 @@ export function getGuests(): Guest[] {
 export function getGuestById(id: string): Guest | undefined {
   return guestsList.find(guest => guest.id === id);
 }
-
-// Senha para o painel admin
-export const ADMIN_PASSWORD = "nucleo2025";

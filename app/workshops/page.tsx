@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { ChevronDown, ChevronUp } from "lucide-react"
+import Link from "next/link"
 
 interface InscritoRow {
   id: string
@@ -27,45 +28,22 @@ interface WorkshopData {
 }
 
 export default function WorkshopsPage() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [password, setPassword] = useState("")
   const [error, setError] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
   const [isLoadingData, setIsLoadingData] = useState(false)
   const [workshops, setWorkshops] = useState<WorkshopData[]>([])
   const [selectedCongresso, setSelectedCongresso] = useState("all")
   const [openWorkshopId, setOpenWorkshopId] = useState<string | null>(null)
 
   useEffect(() => {
-    if (isAuthenticated) {
-      fetchWorkshopsData()
-    }
-  }, [isAuthenticated])
+    fetchWorkshopsData()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
-  const handleLogin = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    setError("")
-    setIsLoading(true)
-
+  const handleLogout = async () => {
     try {
-      const response = await fetch("/api/admin/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password }),
-      })
-
-      if (!response.ok) {
-        setError("Senha incorreta")
-        return
-      }
-
-      setIsAuthenticated(true)
-      setPassword("")
-    } catch (err) {
-      console.error(err)
-      setError("Erro ao autenticar")
+      await fetch("/api/admin/logout", { method: "POST" })
     } finally {
-      setIsLoading(false)
+      window.location.href = "/login?next=/workshops"
     }
   }
 
@@ -95,35 +73,6 @@ export default function WorkshopsPage() {
 
   const toggleWorkshop = (id: string) => {
     setOpenWorkshopId((current) => (current === id ? null : id))
-  }
-
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen bg-linear-to-br from-primary/5 via-background to-accent flex items-center justify-center p-4">
-        <div className="w-full max-w-md rounded-3xl border border-border bg-card p-8 shadow-lg">
-          <h1 className="text-2xl font-semibold text-center mb-6">Login administrativo</h1>
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-muted-foreground mb-2">
-                Senha
-              </label>
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-xl border border-input bg-background px-4 py-3 text-sm shadow-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-                placeholder="Digite a senha do dashboard"
-              />
-            </div>
-            {error && <p className="text-sm text-destructive">{error}</p>}
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Entrando..." : "Entrar"}
-            </Button>
-          </form>
-        </div>
-      </div>
-    )
   }
 
   return (
@@ -161,6 +110,12 @@ export default function WorkshopsPage() {
                 </span>
                 <Button type="button" variant="outline" onClick={fetchWorkshopsData} disabled={isLoadingData}>
                   Atualizar
+                </Button>
+                <Button asChild type="button" variant="outline">
+                  <Link href="/">Dashboard</Link>
+                </Button>
+                <Button type="button" variant="outline" onClick={handleLogout} className="text-destructive hover:text-destructive">
+                  Sair
                 </Button>
               </div>
             </div>

@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
+import { getAdminSession } from "@/lib/admin-auth";
 
 export async function POST(request: Request) {
   try {
@@ -187,6 +188,11 @@ export async function GET(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
+    const session = await getAdminSession();
+    if (!session) {
+      return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
 

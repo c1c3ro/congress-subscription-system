@@ -8,8 +8,9 @@ import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
 import QRScanner from "@/components/qr-scanner"
 import InscritoDisplay from "@/components/inscrito-display"
-import { Lock, Search, Camera, List } from "lucide-react"
+import { Search, Camera, List } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
+import Link from "next/link"
 
 interface Inscrito {
   id: string
@@ -33,10 +34,6 @@ interface Inscrito {
 }
 
 export default function IdentificadorPage() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [password, setPassword] = useState("")
-  const [error, setError] = useState("")
-  const [loading, setLoading] = useState(false)
   const [selectedInscrito, setSelectedInscrito] = useState<Inscrito | null>(null)
   const [scanKey, setScanKey] = useState(0)
 
@@ -46,10 +43,17 @@ export default function IdentificadorPage() {
   const [loadingInscritos, setLoadingInscritos] = useState(false)
 
   useEffect(() => {
-    if (isAuthenticated) {
-      loadAllInscritos()
+    loadAllInscritos()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/admin/logout", { method: "POST" })
+    } finally {
+      window.location.href = "/login?next=/identificador"
     }
-  }, [isAuthenticated])
+  }
 
   const loadAllInscritos = async () => {
     setLoadingInscritos(true)
@@ -151,32 +155,6 @@ export default function IdentificadorPage() {
       return cpfMatch || nameMatch
     })
   }, [allInscritos, searchQuery])
-
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setError("")
-
-    try {
-      const response = await fetch("/api/admin/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password }),
-      })
-
-      if (response.ok) {
-        setIsAuthenticated(true)
-        setPassword("")
-      } else {
-        setError("Senha incorreta")
-      }
-    } catch (err) {
-      console.error("Login error:", err)
-      setError("Erro ao fazer login")
-    } finally {
-      setLoading(false)
-    }
-  }
 
   // Ref para acessar inscritos no callback sem causar re-render
   const allInscritosRef = useRef<Inscrito[]>([])
@@ -280,40 +258,20 @@ export default function IdentificadorPage() {
     )
   }
 
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen bg-linear-to-br from-primary/5 via-background to-accent flex items-center justify-center p-4">
-        <Card className="w-full max-w-md p-8">
-          <div className="flex justify-center mb-6">
-            <div className="bg-primary/10 p-4 rounded-full">
-              <Lock className="w-8 h-8 text-primary" />
-            </div>
-          </div>
-          <h1 className="text-2xl font-bold text-center mb-6">Identificador de Inscritos</h1>
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div>
-              <Input
-                type="password"
-                placeholder="Digite a senha"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full"
-              />
-            </div>
-            {error && <p className="text-sm text-destructive text-center">{error}</p>}
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Entrando..." : "Entrar"}
-            </Button>
-          </form>
-        </Card>
-      </div>
-    )
-  }
-
   return (
     <div className="min-h-screen bg-linear-to-br from-primary/5 via-background to-accent p-3 md:p-4">
       <div className="container mx-auto max-w-6xl py-4 md:py-8">
-        <h1 className="text-2xl md:text-3xl font-bold text-center mb-6 md:mb-8">Identificador de Inscritos</h1>
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between mb-6 md:mb-8">
+          <h1 className="text-2xl md:text-3xl font-bold text-center md:text-left">Identificador de Inscritos</h1>
+          <div className="flex items-center justify-center gap-2 md:justify-end">
+            <Button asChild variant="outline">
+              <Link href="/">Dashboard</Link>
+            </Button>
+            <Button variant="outline" onClick={handleLogout} className="text-destructive hover:text-destructive">
+              Sair
+            </Button>
+          </div>
+        </div>
 
         {!selectedInscrito && (
           <div className="flex justify-center gap-2 mb-4 md:mb-6">

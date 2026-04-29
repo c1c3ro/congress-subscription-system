@@ -1,5 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { NextResponse } from "next/server";
+import { getAdminSession } from "@/lib/admin-auth";
 
 export async function GET(request: Request) {
   try {
@@ -46,6 +47,11 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    const session = await getAdminSession();
+    if (!session) {
+      return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+    }
+
     const { inscrito_id, congresso } = await request.json();
     const supabase = createAdminClient();
 
